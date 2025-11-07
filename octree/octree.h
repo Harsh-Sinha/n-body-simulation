@@ -9,8 +9,8 @@
 
 class Octree 
 { 
-public: 
-    Octree(std::vector<std::shared_ptr<LeafBase>>& leafs, bool supportMultithread);
+public:
+    Octree(std::vector<std::shared_ptr<LeafBase>>& leafs, bool supportMultithread = false);
     ~Octree() = default;
 
 private: 
@@ -75,6 +75,6 @@ private:
     
     } 
     
-    std::unique_ptr<Node> mRoot; 
+    std::unique_ptr<Node> mRoot = std::make_unique<Node>(); 
     bool mSupportMultithread; 
 };
