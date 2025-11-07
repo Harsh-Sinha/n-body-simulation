@@ -1,3 +1,0 @@
-[submodule "Octree"]
-	path = dependencies/Octree
-	url = https://github.com/attcs/Octree.git
