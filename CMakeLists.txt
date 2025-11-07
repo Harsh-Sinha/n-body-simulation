@@ -5,6 +5,5 @@ project(ParallelNBodySimulation)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/Octree/)
-
+add_subdirectory(octree)
 add_subdirectory(playground)
