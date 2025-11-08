@@ -2,19 +2,19 @@
 
 #include <array>
 
-class LeafBase
+class Point3d
 {
 public:
-    LeafBase() 
+    Point3d()
         : mPosition{0.0, 0.0, 0.0}
     {}
-    
-    LeafBase(double x, double y, double z)
+
+    Point3d(double x, double y, double z)
         : mPosition{x, y, z}
     {}
-    
-    virtual ~LeafBase() = default;
-        
+
+    virtual ~Point3d() = default;
+
     virtual const std::array<double, 3>& getPosition()
     {
         return mPosition;

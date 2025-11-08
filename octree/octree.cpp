@@ -2,7 +2,7 @@
 
 #include <limits> 
 
-Octree::Octree(std::vector<std::shared_ptr<LeafBase>>& leafs, bool supportMultithread, size_t maxPointsPerNode) 
+Octree::Octree(std::vector<std::shared_ptr<Point3d>>& leafs, bool supportMultithread, size_t maxPointsPerNode) 
     : mSupportMultithread(supportMultithread)
     , mMaxPointsPerNode(maxPointsPerNode)
 {
@@ -14,7 +14,7 @@ Octree::Octree(std::vector<std::shared_ptr<LeafBase>>& leafs, bool supportMultit
     } 
 }
 
-Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<LeafBase>>& leafs)
+Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<Point3d>>& leafs)
 { 
     double minX = std::numeric_limits<double>::infinity();
     double minY = std::numeric_limits<double>::infinity();
@@ -48,7 +48,7 @@ Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<LeafB
     return box;
 }
 
-void Octree::insert(std::unique_ptr<Node>& node, std::shared_ptr<LeafBase>& leaf)
+void Octree::insert(std::unique_ptr<Node>& node, std::shared_ptr<Point3d>& leaf)
 {
     if (node->isLeafNode())
     {

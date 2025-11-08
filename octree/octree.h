@@ -5,14 +5,14 @@
 #include <array> 
 #include <cmath> 
 
-#include "leaf_base.h" 
+#include "point3d.h" 
 
 static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 5;
 
 class Octree 
 { 
 public:
-    Octree(std::vector<std::shared_ptr<LeafBase>>& leafs, bool supportMultithread = false, size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
+    Octree(std::vector<std::shared_ptr<Point3d>>& leafs, bool supportMultithread = false, size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
     ~Octree() = default;
 
 private: 
@@ -39,7 +39,7 @@ private:
     { 
         BoundingBox boundingBox; 
         std::array<std::unique_ptr<Node>, 8> children;
-        std::shared_ptr<LeafBase> leaf;
+        std::shared_ptr<Point3d> leaf;
         
         bool isLeafNode() const
         {
@@ -59,9 +59,9 @@ private:
         }
     };
 
-    BoundingBox computeBoundingBox(std::vector<std::shared_ptr<LeafBase>>& leafs);
+    BoundingBox computeBoundingBox(std::vector<std::shared_ptr<Point3d>>& leafs);
     
-    void insert(std::unique_ptr<Node>& node, std::shared_ptr<LeafBase>& leaf);
+    void insert(std::unique_ptr<Node>& node, std::shared_ptr<Point3d>& leaf);
     
     void splitBoundingBox(std::unique_ptr<Node>& node);
     
