@@ -55,11 +55,6 @@ private:
             } 
             
             return isLeaf;
-        } 
-        
-        bool containsPoints() const
-        {
-            return points.size() > 0;
         }
     };
 
@@ -93,6 +88,21 @@ private:
         }
         
         return id;
+    }
+
+    inline std::shared_ptr<Node>& getCorrespondingOctant(const std::shared_ptr<Point3d>& point, std::shared_ptr<Node>& node)
+    {
+        size_t octandId = toOctantId(point, node->boundingBox);
+
+        // create new leaf node if needed
+        if (node->octants[octandId] == nullptr)
+        {
+            node->octants[octandId] = std::make_shared<Node>();
+            node->octants[octandId]->boundingBox = createChildBox(octandId, node->boundingBox);
+            node->octants[octandId]->parentNode = node;
+        }
+
+        return node->octants[octandId];
     }
 
     std::shared_ptr<Node> mRoot = std::make_shared<Node>();

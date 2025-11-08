@@ -51,35 +51,26 @@ Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<Point
 
 void Octree::insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point)
 {
-    if (node->isLeafNode())
+    if (node->isLeafNode() && node->points.size() >= mMaxPointsPerNode)
     {
-        if (node->hasPoint())
+        // have to make this an interior node and push all points down the octree
+        for (size_t i = 0; i < node->points.size(); ++i)
         {
-            auto oldLeaf = node->leaf;
-    
-            splitBoundingBox(node);
-    
-            node->leaf = nullptr;
-    
-            insert(node->children[toChildIndex(oldLeaf->getPosition(), node->boundingBox)], oldLeaf);
-            insert(node->children[toChildIndex(leaf->getPosition(), node->boundingBox)], leaf);
+            std::shared_ptr<Node>& octant = getCorrespondingOctant(node->points[i], node);
+            insert(octant, node->points[i]);
         }
-        else
-        {
-            node->leaf = leaf;
-        }
+        node->points.clear();
+    }
+
+    if (node->isLeafNode() && node->points.size() < mMaxPointsPerNode)
+    {
+        node->points.emplace_back(point);
     }
     else
     {
-        int childIndex = toChildIndex(leaf->getPosition(), node->boundingBox);
-    
-        if (node->children[childIndex] == nullptr)
-        {
-            node->children[childIndex] = std::make_unique<Node>();
-            node->children[childIndex]->boundingBox = createChildBox(childIndex, node->boundingBox);
-        }
-    
-        insert(node->children[childIndex], leaf);
+        // keep traversing down the octree to place
+        std::shared_ptr<Node>& octant = getCorrespondingOctant(point, node);
+        insert(octant, point);
     }
 }
 
