@@ -57,19 +57,15 @@ static std::size_t countPointsInTree(const std::shared_ptr<Octree::Node>& node)
     return count;
 }
 
-// check that child's bbox is spatially inside parent's bbox
 static void assertChildInsideParent(const Octree::BoundingBox& parent,
                                     const Octree::BoundingBox& child)
 {
-    // child center must be within parent's box
-    auto dummy = std::make_shared<Point3d>(child.center[0], child.center[1], child.center[2]);
-    REQUIRE(parent.isPointInBox(dummy));
+    auto childCenter = std::make_shared<Point3d>(child.center[0], child.center[1], child.center[2]);
+    REQUIRE(parent.isPointInBox(childCenter));
 
-    // child must not be bigger than parent
-    REQUIRE(child.halfOfSideLength <= parent.halfOfSideLength);
+    REQUIRE(child.halfOfSideLength == Catch::Approx(0.5 * parent.halfOfSideLength));
 }
 
-// traverse and check per-node invariants
 static void validateNodeRecursive(const std::shared_ptr<Octree::Node>& node,
                                   std::size_t maxPointsPerNode,
                                   const std::shared_ptr<Octree::Node>& expectedParent = nullptr)
