@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(OCTREE_LIB OctreeLib)
+set(OCTREE_LIB Octree)
 
 add_library(${OCTREE_LIB} STATIC octree.cpp)
 
