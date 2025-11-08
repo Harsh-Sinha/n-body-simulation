@@ -62,8 +62,6 @@ private:
 
     void insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point);
 
-    void splitBoundingBox(std::shared_ptr<Node>& node);
-
     BoundingBox createChildBox(size_t index, const BoundingBox& parent);
 
     inline size_t toOctantId(const std::shared_ptr<Point3d>& point, const BoundingBox& box)

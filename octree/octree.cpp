@@ -1,11 +1,17 @@
 #include "octree.h"
 
+#include <stdexcept>
 #include <limits> 
 
 Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultithread, size_t maxPointsPerNode) 
     : mSupportMultithread(supportMultithread)
     , mMaxPointsPerNode(maxPointsPerNode)
 {
+    if (points.size() == 0)
+    {
+        throw std::runtime_error("trying to init octree with 0 points");
+    }
+
     mRoot->boundingBox = computeBoundingBox(points);
 
     for (auto& point : points)
@@ -71,15 +77,6 @@ void Octree::insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point
         // keep traversing down the octree to place
         std::shared_ptr<Node>& octant = getCorrespondingOctant(point, node);
         insert(octant, point);
-    }
-}
-
-void Octree::splitBoundingBox(std::shared_ptr<Node>& node)
-{
-    for (int i = 0; i < node->octants.size(); ++i)
-    {
-        node->octants[i] = std::make_shared<Node>();
-        node->octants[i]->boundingBox = createChildBox(i, node->boundingBox);
     }
 }
 
