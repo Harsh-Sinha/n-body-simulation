@@ -7,10 +7,12 @@
 
 #include "leaf_base.h" 
 
+static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 5;
+
 class Octree 
 { 
 public:
-    Octree(std::vector<std::shared_ptr<LeafBase>>& leafs, bool supportMultithread = false);
+    Octree(std::vector<std::shared_ptr<LeafBase>>& leafs, bool supportMultithread = false, size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
     ~Octree() = default;
 
 private: 
@@ -76,5 +78,6 @@ private:
     } 
     
     std::unique_ptr<Node> mRoot = std::make_unique<Node>(); 
-    bool mSupportMultithread; 
+    bool mSupportMultithread;
+    size_t mMaxPointsPerNode;
 };

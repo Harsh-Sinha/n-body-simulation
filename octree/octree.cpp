@@ -2,8 +2,9 @@
 
 #include <limits> 
 
-Octree::Octree(std::vector<std::shared_ptr<LeafBase>>& leafs, bool supportMultithread) 
-    : mSupportMultithread(supportMultithread) 
+Octree::Octree(std::vector<std::shared_ptr<LeafBase>>& leafs, bool supportMultithread, size_t maxPointsPerNode) 
+    : mSupportMultithread(supportMultithread)
+    , mMaxPointsPerNode(maxPointsPerNode)
 {
     mRoot->boundingBox = computeBoundingBox(leafs);
     
