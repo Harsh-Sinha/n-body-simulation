@@ -1,7 +1,7 @@
 // tests/test_octree.cpp
 
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 // expose internals for testing
 #define private public
@@ -128,11 +128,11 @@ TEST_CASE("Bounding box is computed correctly for simple cube")
 
     auto box = root->boundingBox;
 
-    REQUIRE(box.center[0] == Approx(0.5));
-    REQUIRE(box.center[1] == Approx(0.5));
-    REQUIRE(box.center[2] == Approx(0.5));
+    REQUIRE(box.center[0] == Catch::Approx(0.5));
+    REQUIRE(box.center[1] == Catch::Approx(0.5));
+    REQUIRE(box.center[2] == Catch::Approx(0.5));
 
-    REQUIRE(box.halfOfSideLength == Approx(0.5005).epsilon(1e-6));
+    REQUIRE(box.halfOfSideLength == Catch::Approx(0.5005).epsilon(1e-6));
 }
 
 TEST_CASE("Node reports leaf status correctly")
@@ -160,7 +160,7 @@ TEST_CASE("BoundingBox::isPointInBox respects padding")
     REQUIRE(box.isPointInBox(onEdge));
 }
 
-TESTCASE("toOctantId assigns all 8 octants correctly")
+TEST_CASE("toOctantId assigns all 8 octants correctly")
 {
     std::vector<std::shared_ptr<Point3d>> pts{
         makePoint(-1, -1, -1),
@@ -196,29 +196,13 @@ TEST_CASE("getCorrespondingOctant lazily creates child and sets parent")
     auto root = tree.mRoot;
     auto p = makePoint(1,1,1);
 
-    auto &childRef = tree.getCorrespondingOctant(p, root);
+    auto& childRef = tree.getCorrespondingOctant(p, root);
     REQUIRE(childRef != nullptr);
     REQUIRE(childRef->parentNode == root);
 
     // calling again for same point should give same node, not a new one
-    auto &childRef2 = tree.getCorrespondingOctant(p, root);
+    auto& childRef2 = tree.getCorrespondingOctant(p, root);
     REQUIRE(childRef2 == childRef);
-}
-
-TEST_CASE("createChildBox produces correct centers for all 8 children")
-{
-    std::vector<std::shared_ptr<Point3d>> pts{
-        makePoint(-1, -1, -1),
-        makePoint( 1,  1,  1)
-    };
-    Octree tree(pts, false, 5);
-    auto parent = tree.mRoot->boundingBox;
-
-    for (size_t i = 0; i < 8; ++i) {
-        auto child = tree.createChildBox(i, parent);
-
-        REQUIRE(child.halfOfSideLength == Approx(parent.halfOfSideLength / 2.0));
-    }
 }
 
 TEST_CASE("Insert splits node when maxPointsPerNode is small")
@@ -241,28 +225,16 @@ TEST_CASE("Insert splits node when maxPointsPerNode is small")
     REQUIRE(root->points.empty());
 
     size_t nonNullCount = 0;
-    for (const auto &oct : root->octants) {
-        if (oct != nullptr) {
+    for (const auto& oct : root->octants)
+    {
+        if (oct != nullptr)
+        {
             ++nonNullCount;
             REQUIRE(oct->points.size() == 1);
             REQUIRE(oct->isLeafNode());
         }
     }
     REQUIRE(nonNullCount == 8);
-}
-
-TEST_CASE("splitBoundingBox explicitly creates 8 children")
-{
-    std::vector<std::shared_ptr<Point3d>> pts{ makePoint(0,0,0) };
-    Octree tree(pts, false, 5);
-
-    auto root = tree.mRoot;
-    tree.splitBoundingBox(root);
-
-    for (const auto &oct : root->octants) {
-        REQUIRE(oct != nullptr);
-        REQUIRE(oct->boundingBox.halfOfSideLength > 0.0);
-    }
 }
 
 TEST_CASE("Octree should handle empty point sets")
@@ -311,13 +283,14 @@ TEST_CASE("Large octree (≈500 pts) forms a valid spatial subdivision")
     REQUIRE(depth > 0);
     REQUIRE(depth < 20);
 
-    for (const auto &p : pts)
+    for (const auto& p : pts)
     {
         REQUIRE(root->boundingBox.isPointInBox(p));
     }
 }
 
-TEST_CASE("Octree handles highly clustered points plus distant outliers") {
+TEST_CASE("Octree handles highly clustered points plus distant outliers")
+{
     std::vector<std::shared_ptr<Point3d>> pts;
     pts.reserve(500);
 

@@ -7,5 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(external/Catch2)
 
+enable_testing()
+
 add_subdirectory(octree)
 add_subdirectory(playground)
