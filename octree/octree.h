@@ -12,7 +12,7 @@ static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 5;
 class Octree 
 { 
 public:
-    Octree(std::vector<std::shared_ptr<Point3d>>& leafs, 
+    Octree(std::vector<std::shared_ptr<Point3d>>& points, 
            bool supportMultithread = false,
            size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
     ~Octree() = default;
