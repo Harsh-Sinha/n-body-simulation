@@ -19,7 +19,7 @@ public:
 
 private: 
     Octree() = default;
-    
+
     struct BoundingBox
     {
         std::array<double, 3> center{0.0, 0.0, 0.0};
@@ -37,7 +37,7 @@ private:
             return inBox; 
         } 
     };
-    
+
     struct Node
     { 
         BoundingBox boundingBox; 
@@ -64,14 +64,14 @@ private:
     };
 
     BoundingBox computeBoundingBox(std::vector<std::shared_ptr<Point3d>>& points);
-    
-    void insert(std::unique_ptr<Node>& node, std::shared_ptr<Point3d>& point);
-    
-    void splitBoundingBox(std::unique_ptr<Node>& node);
-    
-    BoundingBox createChildBox(int index, const BoundingBox& parent); 
-    
-    inline size_t toOctantId(const std::shared_ptr<Point3d>& point, const BoundingBox& box) 
+
+    void insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point);
+
+    void splitBoundingBox(std::shared_ptr<Node>& node);
+
+    BoundingBox createChildBox(size_t index, const BoundingBox& parent);
+
+    inline size_t toOctantId(const std::shared_ptr<Point3d>& point, const BoundingBox& box)
     {
         auto& p = point->getPosition();
 
