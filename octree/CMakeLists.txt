@@ -8,4 +8,6 @@ target_include_directories(${OCTREE_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(TARGETS ${OCTREE_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
-add_subdirectory(tests)
+if (${ENABLE_TESTING})
+    add_subdirectory(tests)
+endif()
