@@ -11,5 +11,6 @@ if (${ENABLE_TESTING})
 endif()
 
 add_subdirectory(octree)
+add_subdirectory(particle_config_parser)
 add_subdirectory(tools)
 add_subdirectory(playground)

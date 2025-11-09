@@ -1,0 +1,26 @@
+Particle System with 5 particles:
+Particle ID: 0
+Position: (0.196431, 4.03482, 4.99517)
+Velocity: (2.18965, 2.64329, 2.76131)
+Acceleration: (0.0782128, 0.404698, 0.109318)
+Mass: 0.981739
+Particle ID: 1
+Position: (-2.83488, 1.04505, 0.006225)
+Velocity: (1.97666, 2.42329, 2.55052)
+Acceleration: (0.909799, 0.483506, 0.161014)
+Mass: 0.886232
+Particle ID: 2
+Position: (-0.435844, 3.43062, -0.613382)
+Velocity: (1.87737, 1.5569, 1.36718)
+Acceleration: (0.437857, 0.983844, 0.60275)
+Mass: 0.375736
+Particle ID: 3
+Position: (4.88886, 2.36267, 4.79081)
+Velocity: (1.71583, 2.49618, 1.19669)
+Acceleration: (0.383051, 0.850002, 0.372707)
+Mass: 0.841716
+Particle ID: 4
+Position: (-0.186322, 3.69757, 2.22083)
+Velocity: (2.50604, 1.4802, 2.60814)
+Acceleration: (0.244115, 0.330374, 0.331437)
+Mass: 0.560983
