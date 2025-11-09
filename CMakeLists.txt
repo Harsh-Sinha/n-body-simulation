@@ -11,4 +11,5 @@ if (${ENABLE_TESTING})
 endif()
 
 add_subdirectory(octree)
+add_subdirectory(tools)
 add_subdirectory(playground)
