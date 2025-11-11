@@ -4,7 +4,7 @@ set(OCTREE_LIB Octree)
 
 add_library(${OCTREE_LIB} STATIC octree.cpp node_lock.cpp)
 
-target_include_directories(${OCTREE_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${OCTREE_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE Boost::thread)
 
 target_link_libraries(${OCTREE_LIB} PUBLIC OpenMP::OpenMP_CXX)
 
