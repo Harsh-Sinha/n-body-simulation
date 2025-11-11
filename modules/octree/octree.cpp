@@ -13,6 +13,7 @@ Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultit
     }
 
     mRoot->boundingBox = computeBoundingBox(points);
+    mRoot->lock = createNodeLock(mSupportMultithread);
 
     for (auto& point : points)
     {

@@ -6,6 +6,7 @@
 #include <cmath> 
 
 #include "point3d.h" 
+#include "node_lock.h"
 
 static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 5;
 
@@ -44,6 +45,7 @@ private:
         std::array<std::shared_ptr<Node>, 8> octants;
         std::vector<std::shared_ptr<Point3d>> points;
         std::shared_ptr<Node> parentNode;
+        std::unique_ptr<NodeLock> lock;
         
         bool isLeafNode() const
         {
@@ -98,6 +100,7 @@ private:
             node->octants[octandId] = std::make_shared<Node>();
             node->octants[octandId]->boundingBox = createChildBox(octandId, node->boundingBox);
             node->octants[octandId]->parentNode = node;
+            node->octants[octandId]->lock = createNodeLock(mSupportMultithread);
         }
 
         return node->octants[octandId];
