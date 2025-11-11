@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <limits> 
+#include <omp.h>
 
 Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultithread, size_t maxPointsPerNode) 
     : mSupportMultithread(supportMultithread)
