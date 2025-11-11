@@ -2,30 +2,50 @@
 
 void NoOpLock::acquireReader() {};
 void NoOpLock::elevateToWriter() {}
+void NoOpLock::demoteToReader() {}
 void NoOpLock::unlock() {}
+
+
+
+
+thread_local std::unordered_map<SharedLock*, SharedLock::ThreadState> SharedLock::mThreadLockState{};
 
 void SharedLock::acquireReader()
 {
-    mMutex.lock_shared();
+    getThreadState().reader.emplace(mMutex);
 }
 
 void SharedLock::elevateToWriter()
 {
-    mMutex.unlock_shared();
-    mMutex.lock();
-    mExclusiveLockAcquired = true;
+    auto& state = getThreadState();
+
+    boost::upgrade_to_unique_lock<boost::shared_mutex> writer(state.reader.value());
+    state.writer.emplace(mMutex, boost::adopt_lock_t{});
+    state.reader.reset();    
+}
+
+void SharedLock::demoteToReader()
+{
+    auto& state = getThreadState();
+
+    auto* mutex = state.writer->mutex();
+    mutex->unlock_and_lock_upgrade();
+    state.reader.emplace(*mutex, boost::adopt_lock_t{});
+    state.writer.reset();
 }
 
 void SharedLock::unlock()
 {
-    if (mExclusiveLockAcquired)
+    auto& state = getThreadState();
+
+    if (state.reader.has_value())
     {
-        mMutex.unlock();
-        mExclusiveLockAcquired = false;
+        state.reader.reset();
     }
-    else
+
+    if (state.writer.has_value())
     {
-        mMutex.unlock_shared();
+        state.writer.reset();
     }
 }
 

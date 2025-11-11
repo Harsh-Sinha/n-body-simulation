@@ -84,8 +84,7 @@ void Octree::insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point
             insert(octant, node->points[i]);
         }
         node->points.clear();
-        node->lock->unlock();
-        node->lock->acquireReader();
+        node->lock->demoteToReader();
     }
 
     // assumes node still has a reader lock acquired at this point
