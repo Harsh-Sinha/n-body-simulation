@@ -5,6 +5,8 @@ project(ParallelNBodySimulation)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(OpenMP REQUIRED)
+
 if (${ENABLE_TESTING})
     add_subdirectory(external/Catch2)
     enable_testing()
