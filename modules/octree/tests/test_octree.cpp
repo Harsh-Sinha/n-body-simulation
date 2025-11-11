@@ -13,7 +13,14 @@
 #include <memory>
 #include <vector>
 #include <cmath>
+#include <filesystem>
 
+#include "particle_config_parser.hpp"
+
+static std::filesystem::path base()
+{
+    return std::filesystem::canonical(std::filesystem::path(__FILE__)).parent_path();
+}
 
 static std::shared_ptr<Point3d> makePoint(double x, double y, double z)
 {
@@ -332,4 +339,30 @@ TEST_CASE("Octree handles highly clustered points plus distant outliers")
     int depth = computeMaxDepth(root);
     REQUIRE(depth >= 3);
     REQUIRE(depth < 25);
+}
+
+TEST_CASE("Parallel Octree generation with large input size")
+{
+    std::filesystem::path file = base() / "inputs" / "test_particle_config_parallel_tree.txt";
+    auto particles = ParticleConfigParser::parse(file.string());
+
+    std::vector<std::shared_ptr<Point3d>> pts;
+    for (const auto& particle : particles)
+    {
+        pts.emplace_back(std::make_shared<Point3d>(particle.position[0], particle.position[1], particle.position[2]));
+    }
+
+    Octree tree(pts, true);
+    auto root = tree.mRoot;
+    REQUIRE(root != nullptr);
+
+    validateNodeRecursive(root, tree.mMaxPointsPerNode);
+
+    auto total = countPointsInTree(root);
+    REQUIRE(total == pts.size());
+
+    for (const auto& p : pts)
+    {
+        REQUIRE(root->boundingBox.isPointInBox(p));
+    }
 }
