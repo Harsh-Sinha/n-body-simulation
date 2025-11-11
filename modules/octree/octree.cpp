@@ -15,10 +15,22 @@ Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultit
     mRoot->boundingBox = computeBoundingBox(points);
     mRoot->lock = createNodeLock(mSupportMultithread);
 
-    for (auto& point : points)
+    if (mSupportMultithread)
     {
-        mRoot->lock->acquireReader();
-        insert(mRoot, point);
+        #pragma omp parallel for schedule(dynamic)
+        for (auto& point : points)
+        {
+            mRoot->lock->acquireReader();
+            insert(mRoot, point);
+        }
+    }
+    else
+    {
+        for (auto& point : points)
+        {
+            mRoot->lock->acquireReader();
+            insert(mRoot, point);
+        }
     }
 }
 
