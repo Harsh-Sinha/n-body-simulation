@@ -4,3 +4,6 @@
 [submodule "external/barnes-hut-simulation"]
 	path = external/barnes-hut-simulation
 	url = git@github.com:Harsh-Sinha/barnes-hut-simulation.git
+[submodule "external/boost"]
+	path = external/boost
+	url = git@github.com:boostorg/boost.git

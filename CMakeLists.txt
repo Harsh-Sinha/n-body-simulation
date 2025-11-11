@@ -12,6 +12,8 @@ if (${ENABLE_TESTING})
     enable_testing()
 endif()
 
+add_subdirectory(external/boost)
+
 add_subdirectory(modules)
 add_subdirectory(tools)
 add_subdirectory(playground)
