@@ -45,7 +45,8 @@ private:
     struct ThreadState
     {
         std::optional<boost::upgrade_lock<boost::shared_mutex>> reader;
-        std::optional<boost::unique_lock<boost::shared_mutex>> writer;
+        // upgrade to unique lock downgrades mutes to upgrade lock on desctruction
+        std::optional<boost::upgrade_to_unique_lock<boost::shared_mutex>> writer;
     };
 
     inline ThreadState& getThreadState()

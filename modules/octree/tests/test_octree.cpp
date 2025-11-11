@@ -7,6 +7,7 @@
 #define private public
 #define protected public
 #include "octree.h"
+#include "node_lock.h"
 #undef private
 #undef protected
 
@@ -339,6 +340,57 @@ TEST_CASE("Octree handles highly clustered points plus distant outliers")
     int depth = computeMaxDepth(root);
     REQUIRE(depth >= 3);
     REQUIRE(depth < 25);
+}
+
+TEST_CASE("Node Lock acquire reader and unlock")
+{
+    SharedLock lock;
+
+    lock.acquireReader();
+    REQUIRE(lock.getThreadState().reader.has_value());
+    REQUIRE(!lock.getThreadState().writer.has_value());
+
+    lock.unlock();
+    REQUIRE(!lock.getThreadState().reader.has_value());
+    REQUIRE(!lock.getThreadState().writer.has_value());
+}
+
+TEST_CASE("Node Lock elevate to writer and unlock")
+{
+    SharedLock lock;
+
+    lock.acquireReader();
+    REQUIRE(lock.getThreadState().reader.has_value());
+    REQUIRE(!lock.getThreadState().writer.has_value());
+
+    lock.elevateToWriter();
+    REQUIRE(lock.getThreadState().reader.has_value());
+    REQUIRE(lock.getThreadState().writer.has_value());
+
+    lock.unlock();
+    REQUIRE(!lock.getThreadState().reader.has_value());
+    REQUIRE(!lock.getThreadState().writer.has_value());
+}
+
+TEST_CASE("Node Lock multiple elevates from single thread")
+{
+    SharedLock lock;
+
+    lock.acquireReader();
+    REQUIRE(lock.getThreadState().reader.has_value());
+    REQUIRE(!lock.getThreadState().writer.has_value());
+
+    lock.elevateToWriter();
+    REQUIRE(lock.getThreadState().reader.has_value());
+    REQUIRE(lock.getThreadState().writer.has_value());
+
+    lock.elevateToWriter();
+    REQUIRE(lock.getThreadState().reader.has_value());
+    REQUIRE(lock.getThreadState().writer.has_value());
+
+    lock.unlock();
+    REQUIRE(!lock.getThreadState().reader.has_value());
+    REQUIRE(!lock.getThreadState().writer.has_value());
 }
 
 TEST_CASE("Parallel Octree generation with large input size")

@@ -19,9 +19,9 @@ void SharedLock::elevateToWriter()
 {
     auto& state = getThreadState();
 
-    boost::upgrade_to_unique_lock<boost::shared_mutex> writer(state.reader.value());
-    state.writer.emplace(mMutex, boost::adopt_lock_t{});
-    state.reader.reset();    
+    if (state.writer.has_value()) return;
+
+    state.writer.emplace(state.reader.value());
 }
 
 void SharedLock::demoteToReader()
@@ -38,14 +38,16 @@ void SharedLock::unlock()
 {
     auto& state = getThreadState();
 
+    if (state.writer.has_value())
+    {
+        // destruct this first so that lock is now upgrade lock
+        state.writer.reset();
+        // next if case will fully release the lock
+    }
+
     if (state.reader.has_value())
     {
         state.reader.reset();
-    }
-
-    if (state.writer.has_value())
-    {
-        state.writer.reset();
     }
 }
 

@@ -90,20 +90,32 @@ private:
         return id;
     }
 
+    // assumes that a reader/writer lock is already held
     inline std::shared_ptr<Node>& getCorrespondingOctant(const std::shared_ptr<Point3d>& point, std::shared_ptr<Node>& node)
     {
         size_t octandId = toOctantId(point, node->boundingBox);
+        if (node->octants[octandId]) return node->octants[octandId];
 
         // create new leaf node if needed
+        node->lock->elevateToWriter();
         if (node->octants[octandId] == nullptr)
-        {
+        {   
             node->octants[octandId] = std::make_shared<Node>();
             node->octants[octandId]->boundingBox = createChildBox(octandId, node->boundingBox);
             node->octants[octandId]->parentNode = node;
             node->octants[octandId]->lock = createNodeLock(mSupportMultithread);
         }
-
+            
         return node->octants[octandId];
+    }
+
+    // assumes that a reader/writer lock is already held
+    inline void traverseDownTree(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point)
+    {
+        std::shared_ptr<Node>& octant = getCorrespondingOctant(point, node);
+        octant->lock->acquireReader();
+        node->lock->unlock();
+        insert(octant, point);
     }
 
     std::shared_ptr<Node> mRoot = std::make_shared<Node>();

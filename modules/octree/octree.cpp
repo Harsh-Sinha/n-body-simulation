@@ -73,34 +73,37 @@ Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<Point
 // assumes node's reader has already been acquired
 void Octree::insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point)
 {
-    if (node->isLeafNode() && node->points.size() >= mMaxPointsPerNode)
+    if (!node->isLeafNode())
     {
-        // have to make this an interior node and push all points down the octree
-        node->lock->elevateToWriter();
-        for (size_t i = 0; i < node->points.size(); ++i)
-        {
-            std::shared_ptr<Node>& octant = getCorrespondingOctant(node->points[i], node);
-            octant->lock->acquireReader();
-            insert(octant, node->points[i]);
-        }
-        node->points.clear();
-        node->lock->demoteToReader();
-    }
-
-    // assumes node still has a reader lock acquired at this point
-    if (node->isLeafNode() && node->points.size() < mMaxPointsPerNode)
-    {
-        node->lock->elevateToWriter();
-        node->points.emplace_back(point);
-        node->lock->unlock();
+        traverseDownTree(node, point);
     }
     else
     {
-        // keep traversing down the octree to place
-        std::shared_ptr<Node>& octant = getCorrespondingOctant(point, node);
-        octant->lock->acquireReader();
-        node->lock->unlock();
-        insert(octant, point);
+        node->lock->elevateToWriter();
+        if (node->isLeafNode())
+        {
+            if (node->points.size() < mMaxPointsPerNode)
+            {
+                node->points.emplace_back(point);
+                node->lock->unlock();
+            }
+            else
+            {
+                for (size_t i = 0; i < node->points.size(); ++i)
+                {
+                    auto& octant = getCorrespondingOctant(node->points[i], node);
+                    octant->lock->acquireReader();
+                    insert(octant, node->points[i]);
+                }
+                node->points.clear();
+                
+                traverseDownTree(node, point);
+            }
+        }
+        else
+        {
+            traverseDownTree(node, point);
+        }
     }
 }
 
