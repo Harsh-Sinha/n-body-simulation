@@ -3,8 +3,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/locks.hpp>
+#include <mutex>
 
 class NodeLock
 {
@@ -14,7 +13,6 @@ public:
 
     virtual void acquireReader() = 0;
     virtual void elevateToWriter() = 0;
-    virtual void demoteToReader() = 0;
     virtual void unlock() = 0;
 };
 
@@ -26,37 +24,20 @@ public:
 
     virtual void acquireReader() override;
     virtual void elevateToWriter() override;
-    virtual void demoteToReader() override;
     virtual void unlock() override;
 };
 
-class SharedLock : public NodeLock
+class BasicLock : public NodeLock
 {
 public:
-    SharedLock() = default;
-    virtual ~SharedLock() override = default;
+    BasicLock() = default;
+    virtual ~BasicLock() override = default;
 
     virtual void acquireReader() override;
     virtual void elevateToWriter() override;
-    virtual void demoteToReader() override;
     virtual void unlock() override;
-
 private:
-    struct ThreadState
-    {
-        std::optional<boost::upgrade_lock<boost::shared_mutex>> reader;
-        // upgrade to unique lock downgrades mutes to upgrade lock on desctruction
-        std::optional<boost::upgrade_to_unique_lock<boost::shared_mutex>> writer;
-    };
-
-    inline ThreadState& getThreadState()
-    {
-        return mThreadLockState[this];
-    }
-
-    static thread_local std::unordered_map<SharedLock*, ThreadState> mThreadLockState;
-
-    boost::shared_mutex mMutex;
+    std::mutex mMutex;
 };
 
 std::unique_ptr<NodeLock> createNodeLock(bool supportMultithread);
