@@ -18,9 +18,7 @@ public:
            size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
     ~Octree() = default;
 
-private: 
-    Octree() = default;
-
+protected:
     struct BoundingBox
     {
         std::array<double, 3> center{0.0, 0.0, 0.0};
@@ -59,6 +57,12 @@ private:
             return isLeaf;
         }
     };
+
+    std::shared_ptr<Node> mRoot = std::make_shared<Node>();
+    std::vector<std::shared_ptr<Node>> mLeafNodes;
+
+private: 
+    Octree() = default;
 
     BoundingBox computeBoundingBox(std::vector<std::shared_ptr<Point3d>>& points);
 
@@ -118,7 +122,8 @@ private:
         insert(octant, point);
     }
 
-    std::shared_ptr<Node> mRoot = std::make_shared<Node>();
+    void generateLeafNodeList(std::shared_ptr<Node>& node);
+
     bool mSupportMultithread;
     size_t mMaxPointsPerNode;
 };

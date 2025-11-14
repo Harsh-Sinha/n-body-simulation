@@ -33,6 +33,8 @@ Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultit
             insert(mRoot, point);
         }
     }
+
+    generateLeafNodeList(mRoot);
 }
 
 Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<Point3d>>& points)
@@ -119,4 +121,24 @@ Octree::BoundingBox Octree::createChildBox(size_t index, const BoundingBox& pare
     child.center[2] += (index < 4) ? child.halfOfSideLength : -child.halfOfSideLength;
     
     return child;
+}
+
+void Octree::generateLeafNodeList(std::shared_ptr<Node>& node)
+{
+    if (node == nullptr) return;
+
+    if (node->isLeafNode())
+    {
+        mLeafNodes.emplace_back(node);
+    }
+    else
+    {
+        for (auto& octant : node->octants)
+        {
+            if (octant)
+            {
+                generateLeafNodeList(octant);
+            }
+        }
+    }
 }
