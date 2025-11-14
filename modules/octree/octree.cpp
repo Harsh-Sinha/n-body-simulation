@@ -4,9 +4,11 @@
 #include <limits> 
 #include <omp.h>
 
-Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultithread, size_t maxPointsPerNode) 
+Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultithread, 
+               size_t parallelThresholdForInsert, size_t maxPointsPerNode) 
     : mSupportMultithread(supportMultithread)
     , mMaxPointsPerNode(maxPointsPerNode)
+    , mParallelThresholdForInsert(parallelThresholdForInsert)
 {
     if (points.size() == 0)
     {
@@ -102,8 +104,7 @@ void Octree::insertParallel(std::shared_ptr<Node>& node)
     if (node == nullptr) return;
     if (node->points.size() <= mMaxPointsPerNode) return;
 
-    static constexpr size_t PARALLEL_THRESHOLD = 5000;
-    if (node->points.size() < PARALLEL_THRESHOLD)
+    if (node->points.size() < mParallelThresholdForInsert)
     {
         std::vector<std::shared_ptr<Point3d>> temp;
         temp.swap(node->points);

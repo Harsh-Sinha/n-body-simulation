@@ -8,12 +8,15 @@
 #include "point3d.h" 
 
 static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 5;
+// when node contains <= number of points switch to serial insert algorithm
+static constexpr size_t PARALLEL_THRESHOLD_FOR_INSERT = 5000;
 
 class Octree 
 { 
 public:
     Octree(std::vector<std::shared_ptr<Point3d>>& points, 
            bool supportMultithread = false,
+           size_t parallelThresholdForInsert = PARALLEL_THRESHOLD_FOR_INSERT,
            size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
     ~Octree() = default;
 
@@ -115,4 +118,5 @@ private:
 
     bool mSupportMultithread;
     size_t mMaxPointsPerNode;
+    size_t mParallelThresholdForInsert;
 };
