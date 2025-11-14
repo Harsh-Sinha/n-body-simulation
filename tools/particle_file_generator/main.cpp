@@ -1,20 +1,10 @@
 #include <iostream>
-#include <array>
-#include <string>
-#include <fstream>
-#include <random>
 
-struct ParticleConfig
-{
-    std::array<std::array<double, 3>, 2> boundingBox;
-    std::array<double, 2> massLimits;
-    std::array<double, 2> velocityLimits;
-    std::array<double, 2> accelerationLimits;
-};
+#include "particle_config.hpp"
 
 struct UserInput
 {
-    ParticleConfig particleConfig;
+    ParticleConfig::Limits limits;
     size_t numParticles;
     std::string outFile;
 };
@@ -34,8 +24,8 @@ bool parseArgs(int argc, char** argv, UserInput &out)
         {
             if (!need(6)) return false;
 
-            out.particleConfig.boundingBox[0] = { d(1), d(2), d(3) };
-            out.particleConfig.boundingBox[1] = { d(4), d(5), d(6) };
+            out.limits.boundingBox[0] = { d(1), d(2), d(3) };
+            out.limits.boundingBox[1] = { d(4), d(5), d(6) };
             i+=6;
             ++argsParsed;
         }
@@ -43,7 +33,7 @@ bool parseArgs(int argc, char** argv, UserInput &out)
         {
             if (!need(2)) return false;
         
-            out.particleConfig.massLimits = { d(1), d(2) };
+            out.limits.massLimits = { d(1), d(2) };
             i+=2;
             ++argsParsed;
         }
@@ -51,7 +41,7 @@ bool parseArgs(int argc, char** argv, UserInput &out)
         {
             if (!need(2)) return false;
         
-            out.particleConfig.velocityLimits = { d(1), d(2) };
+            out.limits.velocityLimits = { d(1), d(2) };
             i+=2;
             ++argsParsed;
         }
@@ -59,7 +49,7 @@ bool parseArgs(int argc, char** argv, UserInput &out)
         {
             if (!need(2)) return false;
          
-            out.particleConfig.accelerationLimits = { d(1), d(2) };
+            out.limits.accelerationLimits = { d(1), d(2) };
             i+=2;
             ++argsParsed;
         }
@@ -88,33 +78,6 @@ bool parseArgs(int argc, char** argv, UserInput &out)
     return argsParsed == 6;
 }
 
-double getRandomNumber(double lower, double upper)
-{
-    static std::mt19937_64 rng{std::random_device{}()};
-    std::uniform_real_distribution<double> distribution(lower, upper);
-    return distribution(rng);
-}
-
-void createParticle(std::ofstream& file, const ParticleConfig& config)
-{
-    file << "Position: (" 
-         << getRandomNumber(config.boundingBox[0][0], config.boundingBox[1][0]) << ", " 
-         << getRandomNumber(config.boundingBox[0][1], config.boundingBox[1][1]) << ", " 
-         << getRandomNumber(config.boundingBox[0][2], config.boundingBox[1][2]) << ")\n";
-    
-    file << "Velocity: (" 
-         << getRandomNumber(config.velocityLimits[0], config.velocityLimits[1]) << ", "
-         << getRandomNumber(config.velocityLimits[0], config.velocityLimits[1]) << ", "
-         << getRandomNumber(config.velocityLimits[0], config.velocityLimits[1]) << ")\n";
-
-    file << "Acceleration: (" 
-         << getRandomNumber(config.accelerationLimits[0], config.accelerationLimits[1]) << ", " 
-         << getRandomNumber(config.accelerationLimits[0], config.accelerationLimits[1]) << ", "
-         << getRandomNumber(config.accelerationLimits[0], config.accelerationLimits[1]) << ")\n";
-    
-    file << "Mass: " << getRandomNumber(config.massLimits[0], config.massLimits[1]) << "\n"; 
-}
-
 int main(int argc, char* argv[])
 {
     UserInput input;
@@ -122,24 +85,14 @@ int main(int argc, char* argv[])
 
     if (success)
     {
-        std::ofstream file(input.outFile, std::ios::out | std::ios::trunc);
-        
-        if (!file.is_open())
+        try
         {
-            std::cout << "unable to open file: " << input.outFile << std::endl;
+            ParticleConfig::generate(input.numParticles, input.limits, input.outFile);
         }
-        else
+        catch(const std::exception& e)
         {
-            file << "Particle System with " << input.numParticles << " particles:\n";
-
-            for (size_t i = 0; i < input.numParticles; ++i)
-            {
-                file << "Particle ID: " << i << std::endl;
-                createParticle(file, input.particleConfig);
-            }
+            std::cerr << e.what() << '\n';
         }
-
-        file.close();
     }
     else
     {
