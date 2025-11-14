@@ -14,24 +14,10 @@ Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultit
     }
 
     mRoot->boundingBox = computeBoundingBox(points);
-    mRoot->lock = createNodeLock(mSupportMultithread);
 
-    if (mSupportMultithread)
+    for (auto& point : points)
     {
-        #pragma omp parallel for schedule(dynamic)
-        for (auto& point : points)
-        {
-            mRoot->lock->acquireReader();
-            insert(mRoot, point);
-        }
-    }
-    else
-    {
-        for (auto& point : points)
-        {
-            mRoot->lock->acquireReader();
-            insert(mRoot, point);
-        }
+        insert(mRoot, point);
     }
 
     generateLeafNodeList(mRoot);
@@ -72,43 +58,30 @@ Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<Point
     return box;
 }
 
-// assumes node's reader has already been acquired
 void Octree::insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point)
 {
-    if (!node->isLeafNode())
+    if (node->isLeafNode() && node->points.size() >= mMaxPointsPerNode)
     {
-        traverseDownTree(node, point);
+        // have to make this an interior node and push all points down the octree
+        for (size_t i = 0; i < node->points.size(); ++i)
+        {
+            std::shared_ptr<Node>& octant = getCorrespondingOctant(node->points[i], node);
+            insert(octant, node->points[i]);
+        }
+        node->points.clear();
+    }
+
+    if (node->isLeafNode() && node->points.size() < mMaxPointsPerNode)
+    {
+        node->points.emplace_back(point);
     }
     else
     {
-        node->lock->elevateToWriter();
-        if (node->isLeafNode())
-        {
-            if (node->points.size() < mMaxPointsPerNode)
-            {
-                node->points.emplace_back(point);
-                node->lock->unlock();
-            }
-            else
-            {
-                for (size_t i = 0; i < node->points.size(); ++i)
-                {
-                    auto& octant = getCorrespondingOctant(node->points[i], node);
-                    octant->lock->acquireReader();
-                    insert(octant, node->points[i]);
-                }
-                node->points.clear();
-                
-                traverseDownTree(node, point);
-            }
-        }
-        else
-        {
-            traverseDownTree(node, point);
-        }
+        // keep traversing down the octree to place
+        std::shared_ptr<Node>& octant = getCorrespondingOctant(point, node);
+        insert(octant, point);
     }
 }
-
 Octree::BoundingBox Octree::createChildBox(size_t index, const BoundingBox& parent)
 {
     BoundingBox child;
