@@ -16,7 +16,7 @@
 #include <cmath>
 #include <filesystem>
 
-#include "particle_config_parser.hpp"
+#include "particle_config.hpp"
 
 static std::filesystem::path base()
 {
@@ -360,7 +360,7 @@ TEST_CASE("Octree handles highly clustered points plus distant outliers")
 TEST_CASE("Parallel Octree generation with large input size")
 {
     std::filesystem::path file = base() / "inputs" / "test_particle_config_parallel_tree.txt";
-    auto particles = ParticleConfigParser::parse(file.string());
+    auto particles = ParticleConfig::parse(file.string());
 
     std::vector<std::shared_ptr<Point3d>> pts;
     for (const auto& particle : particles)

@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <string>
 
-#include "particle_config_parser.hpp"
+#include "particle_config.hpp"
 
 static std::filesystem::path base()
 {
@@ -14,7 +14,7 @@ static std::filesystem::path base()
 TEST_CASE("Parses empty particle file")
 {
     std::filesystem::path file = base() / "inputs" / "test_particle_config1.txt";
-    auto particles = ParticleConfigParser::parse(file.string());
+    auto particles = ParticleConfig::parse(file.string());
 
     REQUIRE(particles.size() == 0);
 }
@@ -22,7 +22,7 @@ TEST_CASE("Parses empty particle file")
 TEST_CASE("Parses five-particle file (checks all values)")
 {
     std::filesystem::path file = base() / "inputs" / "test_particle_config0.txt";
-    auto particles = ParticleConfigParser::parse(file.string());
+    auto particles = ParticleConfig::parse(file.string());
 
     REQUIRE(particles.size() == 5);
 
@@ -105,5 +105,107 @@ TEST_CASE("Parses five-particle file (checks all values)")
 TEST_CASE("Try to parse non existant file")
 {
     std::filesystem::path file = base() / "inputs" / "dummy.txt";
-    REQUIRE_THROWS(ParticleConfigParser::parse(file.string()));
+    REQUIRE_THROWS(ParticleConfig::parse(file.string()));
+}
+
+TEST_CASE("Particle generation returns particles within limits", "[particle][generate]")
+{
+    ParticleConfig::Limits limits;
+
+    // bounding position limits
+    limits.boundingBox = {{
+        { -10.0, -5.0,  0.0 },   // min xyz
+        {  10.0,  5.0,  1.0 }    // max xyz
+    }};
+
+    // mass, velocity, acceleration limits
+    limits.massLimits          = { 1.0, 5.0 };
+    limits.velocityLimits      = { -2.0, 2.0 };
+    limits.accelerationLimits  = { -0.5, 0.5 };
+
+    const size_t N = 1000;
+
+    auto particles = ParticleConfig::generate(N, limits);
+
+    REQUIRE(particles.size() == N);
+
+    for (size_t i = 0; i < N; ++i)
+    {
+        const auto& p = particles[i];
+
+        REQUIRE(p.id == i);
+
+        for (int d = 0; d < 3; ++d)
+        {
+            REQUIRE(p.position[d] >= limits.boundingBox[0][d]);
+            REQUIRE(p.position[d] <= limits.boundingBox[1][d]);
+        }
+
+        for (int d = 0; d < 3; ++d)
+        {
+            REQUIRE(p.velocity[d] >= limits.velocityLimits[0]);
+            REQUIRE(p.velocity[d] <= limits.velocityLimits[1]);
+        }
+
+        for (int d = 0; d < 3; ++d)
+        {
+            REQUIRE(p.acceleration[d] >= limits.accelerationLimits[0]);
+            REQUIRE(p.acceleration[d] <= limits.accelerationLimits[1]);
+        }
+
+        REQUIRE(p.mass >= limits.massLimits[0]);
+        REQUIRE(p.mass <= limits.massLimits[1]);
+    }
+}
+
+
+TEST_CASE("Particle::generate creates a valid output file", "[particle][generate][file]")
+{
+    ParticleConfig::Limits limits;
+
+    limits.boundingBox = {{
+        { -1.0, -1.0, -1.0 },
+        {  1.0,  1.0,  1.0 }
+    }};
+
+    limits.massLimits          = { 0.1, 10.0 };
+    limits.velocityLimits      = { -1.0, 1.0 };
+    limits.accelerationLimits  = { -0.1, 0.1 };
+
+    const size_t N = 10;
+
+    std::string filename = "test_particle_output.txt";
+
+    if (std::filesystem::exists(filename))
+        std::filesystem::remove(filename);
+
+    REQUIRE_NOTHROW( ParticleConfig::generate(N, limits, filename) );
+
+    REQUIRE(std::filesystem::exists(filename));
+
+    std::ifstream file(filename);
+    REQUIRE(file.is_open());
+
+    std::string line;
+    REQUIRE(std::getline(file, line)); 
+
+    REQUIRE(line.find(std::to_string(N)) != std::string::npos);
+
+    bool foundParticleLine = false;
+    while (std::getline(file, line))
+    {
+        if (line.find("Particle ID:") != std::string::npos)
+        {
+            foundParticleLine = true;
+            break;
+        }
+    }
+
+    REQUIRE(foundParticleLine);
+
+    file.close();
+
+    // Clean up after test
+    std::filesystem::remove(filename);
+    REQUIRE(!std::filesystem::exists(filename));
 }

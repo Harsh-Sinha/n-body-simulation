@@ -3,12 +3,12 @@
 #include <array>
 
 #include "point3d.h"
-#include "particle_config_parser.hpp"
+#include "particle_config.hpp"
 
 struct Particle : public Point3d
 {
     Particle() = default;
-    Particle(const ParticleConfigParser::Particle& particle)
+    Particle(const ParticleConfig::Particle& particle)
         : Point3d(particle.position[0], particle.position[1], particle.position[2])
         , mVelocity(particle.velocity)
         , mAcceleration(particle.acceleration)

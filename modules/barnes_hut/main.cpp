@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "particle.h"
-#include "particle_config_parser.hpp"
+#include "particle_config.hpp"
 #include "octree.h"
 
 struct UserInput
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
     if (success)
     {
-        auto inputParticles = ParticleConfigParser::parse(input.filename);
+        auto inputParticles = ParticleConfig::parse(input.filename);
 
         std::vector<std::shared_ptr<Point3d>> particles;
         for (const auto& particle : inputParticles)
