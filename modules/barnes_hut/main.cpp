@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
             particles.emplace_back(std::make_shared<Particle>(particle));
         }
 
-        Octree tree(particles, false, 3);
+        Octree tree(particles);
     }
     else
     {
