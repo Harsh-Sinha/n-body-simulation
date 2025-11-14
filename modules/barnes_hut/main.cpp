@@ -1,0 +1,87 @@
+#include <string>
+#include <vector>
+#include <memory>
+#include <iostream>
+
+#include "particle.h"
+#include "particle_config_parser.hpp"
+#include "octree.h"
+
+struct UserInput
+{
+    std::string filename;
+    double t;
+    double softening;
+};
+
+bool parseArgs(int argc, char** argv, UserInput &out)
+{
+    int argsParsed = 0;
+
+    for (int i=1; i<argc; ++i)
+    {
+        std::string a = argv[i];
+
+        auto need = [&](int k){ return (i+k) < argc; };
+        auto d    = [&](int k){ return std::stod(argv[i+k]); };
+
+        if (a == "-t")
+        {
+            if (!need(1)) return false;
+
+            out.t = d(1);
+            ++i;
+            ++argsParsed;
+        }
+        else if (a == "-s")
+        {
+            if (!need(1)) return false;
+
+            out.softening = d(1);
+            ++i;
+            ++argsParsed;
+        }
+        else if (a=="-f")
+        {
+            if (!need(1)) return false;
+        
+            out.filename = argv[i+1];
+            ++i;
+            ++argsParsed;
+        }
+        else 
+        {
+            return false;
+        }
+    }
+
+    return argsParsed == 3;
+}
+
+int main(int argc, char* argv[])
+{
+    UserInput input;
+    bool success = parseArgs(argc, argv, input);
+
+    if (success)
+    {
+        auto inputParticles = ParticleConfigParser::parse(input.filename);
+
+        std::vector<std::shared_ptr<Point3d>> particles;
+        for (const auto& particle : inputParticles)
+        {
+            particles.emplace_back(std::make_shared<Particle>(particle));
+        }
+
+        Octree tree(particles, false, 3);
+    }
+    else
+    {
+        std::cout << "Usage: ./b_hut -t A -s B -f file_name" << std::endl;
+        std::cout << "A - time step (s)" << std::endl;
+        std::cout << "B - softening factor" << std::endl;
+        std::cout << "file_name - particle config file to use" << std::endl;
+    }
+
+    return 0;
+}
