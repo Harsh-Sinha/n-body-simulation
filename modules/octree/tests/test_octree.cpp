@@ -28,6 +28,17 @@ static std::shared_ptr<Point3d> makePoint(double x, double y, double z)
     return std::make_shared<Point3d>(x, y, z);
 }
 
+static void validateLeafNodesList(const Octree& tree, const size_t expectedPoints)
+{
+    size_t numPoints = 0;
+    for (const auto& leaf : tree.mLeafNodes)
+    {
+        numPoints += leaf->points.size();
+    }
+
+    REQUIRE(numPoints == expectedPoints);
+}
+
 static int computeMaxDepth(const std::shared_ptr<Octree::Node>& node)
 {
     if (!node)
@@ -283,6 +294,8 @@ TEST_CASE("Large octree (≈500 pts) forms a valid spatial subdivision")
     auto totalInTree = countPointsInTree(root);
     REQUIRE(totalInTree == pts.size());
 
+    validateLeafNodesList(tree, totalInTree);
+
     int depth = computeMaxDepth(root);
     REQUIRE(depth > 0);
     REQUIRE(depth < 20);
@@ -332,6 +345,8 @@ TEST_CASE("Octree handles highly clustered points plus distant outliers")
     auto total = countPointsInTree(root);
     REQUIRE(total == pts.size());
 
+    validateLeafNodesList(tree, total);
+
     for (const auto& p : pts)
     {
         REQUIRE(root->boundingBox.isPointInBox(p));
@@ -361,6 +376,8 @@ TEST_CASE("Parallel Octree generation with large input size")
 
     auto total = countPointsInTree(root);
     REQUIRE(total == pts.size());
+
+    validateLeafNodesList(tree, total);
 
     for (const auto& p : pts)
     {
