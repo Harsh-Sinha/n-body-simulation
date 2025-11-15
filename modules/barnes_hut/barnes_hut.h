@@ -5,6 +5,7 @@
 
 #include "octree.h"
 #include "point3d.h"
+#include "particle.h"
 
 class BarnesHut
 {

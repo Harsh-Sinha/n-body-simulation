@@ -1,5 +1,4 @@
 #include "barnes_hut.h"
-#include "particle.h"
 
 #include <cmath>
 #include <cassert>
