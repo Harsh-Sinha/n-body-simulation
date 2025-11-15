@@ -1,6 +1,7 @@
 #include "barnes_hut.h"
 #include "particle.h"
 
+#include <cmath>
 #include <cassert>
 
 #include <omp.h>
@@ -24,6 +25,7 @@ void BarnesHut::simulate()
         calculateCenterOfMass(tree.getLeafNodes());
 
         // apply forces
+        calculateForce(tree.getLeafNodes(), tree.getRootNode());
 
         // update pos/vel/acc
     }
@@ -111,4 +113,100 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
             nextSet.clear();
         }
     }
+}
+
+void BarnesHut::calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs, std::shared_ptr<Octree::Node>& root)
+{
+    #pragma omp parallel for schedule(dynamic)
+    for (size_t i = 0; i < leafs.size(); ++i)
+    {
+        for (size_t j = 0; j < leafs[i]->points.size(); ++j)
+        {
+            auto particle = std::dynamic_pointer_cast<Particle>(leafs[i]->points[j]);
+
+            assert(particle);
+
+            particle->mAppliedForce = 0.0;
+            calculateForce(particle, root);
+        }
+    }
+}
+
+void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_ptr<Octree::Node>& node)
+{
+    if (!node->boundingBox.isPointInBox(particle) && isSufficientlyFar(particle, node))
+    {
+        if (node->isLeafNode())
+        {
+            // use all particles in this node to apply forces on particle
+            for (auto& point : node->points)
+            {
+                auto temp = std::dynamic_pointer_cast<Particle>(point);
+
+                assert(particle);
+
+                particle->applyForce(temp);
+            }
+        }
+        else
+        {
+            // estimate all particles within this octant using computed center of mass
+            auto temp = std::dynamic_pointer_cast<Particle>(node->points[0]);
+
+            assert(temp);
+
+            particle->applyForce(temp);
+        }
+    }
+    else
+    {
+        // we can be in this case for 2 reasons:
+        // 1. particle is contained inside the node of the bounding box which
+        // means we cannot make use of the total mass and center of mass estimate 
+        // 2. node is not sufficiently far away so we cannot use the
+        // center of mass and total mass of all children node of this
+        // root encompasses all nodes so we cannot use it in the calculation
+        bool isLeaf = true;
+        for (auto& octant : node->octants)
+        {
+            if (octant)
+            {
+                isLeaf = false;
+                calculateForce(particle, octant);
+            }
+        }
+
+        if (isLeaf)
+        {
+            // calculate forces with all other particles in the leaf node
+
+            // current particle will also be in this list
+            for (auto& point : node->points)
+            {
+                auto temp = std::dynamic_pointer_cast<Particle>(point);
+
+                assert(particle);
+                
+                if (temp->mId != particle->mId)
+                {
+                    particle->applyForce(temp);
+                }
+            }
+        }
+    }
+}
+
+bool BarnesHut::isSufficientlyFar(const std::shared_ptr<Particle>& particle, const std::shared_ptr<Octree::Node>& node)
+{
+    double s = node->boundingBox.halfOfSideLength * 2.0;
+
+    auto& posA = particle->getPosition();
+    auto& posB = node->points[0]->getPosition();
+    double d = std::sqrt(std::pow(posA[0] - posB[0], 2) + std::pow(posA[1] - posB[1], 2) + std::pow(posA[2] - posB[2], 2));
+
+    double quotient = s / d;
+
+    static constexpr double THETA = 0.5;
+
+    return quotient < THETA;
 }

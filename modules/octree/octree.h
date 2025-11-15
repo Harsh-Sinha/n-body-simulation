@@ -87,6 +87,11 @@ public:
         return mLeafNodes;
     }
 
+    inline std::shared_ptr<Node>& getRootNode()
+    {
+        return mRoot;
+    }
+
 private: 
     Octree() = default;
 

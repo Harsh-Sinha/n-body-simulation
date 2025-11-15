@@ -21,6 +21,14 @@ private:
 
     void calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>& leafs);
 
+    void calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs, std::shared_ptr<Octree::Node>& root);
+
+    void calculateForce(std::shared_ptr<Particle>& particle, std::shared_ptr<Octree::Node>& node);
+
+    void calculateForce(std::shared_ptr<Particle>& particle, std::shared_ptr<Point3d> node);
+
+    bool isSufficientlyFar(const std::shared_ptr<Particle>& particle, const std::shared_ptr<Octree::Node>& node);
+
     std::vector<std::shared_ptr<Point3d>>& mParticles;
     double mDt;
     double mSimulationLength;
