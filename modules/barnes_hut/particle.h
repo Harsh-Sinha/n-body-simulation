@@ -15,6 +15,13 @@ struct Particle : public Point3d
         , mMass(particle.mass)
         , mId(particle.id)
     {}
+    Particle(double x, double y, double z, double mass)
+        : Point3d(x, y, z)
+        , mVelocity( {0.0, 0.0, 0.0} )
+        , mAcceleration( {0.0, 0.0, 0.0} )
+        , mMass(mass)
+        , mId(0)
+    {}
         
     virtual ~Particle() = default;
 

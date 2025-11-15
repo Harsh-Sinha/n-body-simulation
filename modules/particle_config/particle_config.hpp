@@ -9,6 +9,7 @@
 #include <random>
 #include <fstream>
 
+namespace {
 namespace ParticleConfig
 {
     struct Particle
@@ -165,4 +166,4 @@ namespace ParticleConfig
 
         file.close();
     }
-}
+} }

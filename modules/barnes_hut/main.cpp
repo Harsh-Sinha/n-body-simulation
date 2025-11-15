@@ -6,11 +6,13 @@
 #include "particle.h"
 #include "particle_config.hpp"
 #include "octree.h"
+#include "barnes_hut.h"
 
 struct UserInput
 {
     std::string filename;
     double t;
+    double simulationLength;
     double softening;
 };
 
@@ -30,6 +32,14 @@ bool parseArgs(int argc, char** argv, UserInput &out)
             if (!need(1)) return false;
 
             out.t = d(1);
+            ++i;
+            ++argsParsed;
+        }
+        else if  (a == "-l")
+        {
+            if (!need(1)) return false;
+
+            out.simulationLength = d(1);
             ++i;
             ++argsParsed;
         }
@@ -55,7 +65,7 @@ bool parseArgs(int argc, char** argv, UserInput &out)
         }
     }
 
-    return argsParsed == 3;
+    return argsParsed == 4;
 }
 
 int main(int argc, char* argv[])
@@ -73,7 +83,8 @@ int main(int argc, char* argv[])
             particles.emplace_back(std::make_shared<Particle>(particle));
         }
 
-        Octree tree(particles);
+        BarnesHut bh(particles, input.t, input.simulationLength, input.softening);
+        bh.simulate();
     }
     else
     {

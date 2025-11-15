@@ -20,7 +20,6 @@ public:
            size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
     ~Octree() = default;
 
-protected:
     struct BoundingBox
     {
         std::array<double, 3> center{0.0, 0.0, 0.0};
@@ -59,21 +58,7 @@ protected:
         }
     };
 
-    std::shared_ptr<Node> mRoot = std::make_shared<Node>();
-    std::vector<std::shared_ptr<Node>> mLeafNodes;
-
-private: 
-    Octree() = default;
-
-    BoundingBox computeBoundingBox(std::vector<std::shared_ptr<Point3d>>& points);
-
-    void insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point);
-
-    void insertParallel(std::shared_ptr<Node>& node);
-
-    BoundingBox createChildBox(size_t index, const BoundingBox& parent);
-
-    inline size_t toOctantId(const std::shared_ptr<Point3d>& point, const BoundingBox& box)
+    static inline size_t toOctantId(const std::shared_ptr<Point3d>& point, const BoundingBox& box)
     {
         auto& p = point->getPosition();
 
@@ -97,6 +82,22 @@ private:
         return id;
     }
 
+    inline std::vector<std::shared_ptr<Node>>& getLeafNodes()
+    {
+        return mLeafNodes;
+    }
+
+private: 
+    Octree() = default;
+
+    BoundingBox computeBoundingBox(std::vector<std::shared_ptr<Point3d>>& points);
+
+    void insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point);
+
+    void insertParallel(std::shared_ptr<Node>& node);
+
+    BoundingBox createChildBox(size_t index, const BoundingBox& parent);
+
     // assumes that a reader/writer lock is already held
     inline std::shared_ptr<Node>& getCorrespondingOctant(const std::shared_ptr<Point3d>& point, std::shared_ptr<Node>& node)
     {
@@ -116,6 +117,8 @@ private:
 
     void generateLeafNodeList(std::shared_ptr<Node>& node);
 
+    std::shared_ptr<Node> mRoot = std::make_shared<Node>();
+    std::vector<std::shared_ptr<Node>> mLeafNodes;
     bool mSupportMultithread;
     size_t mMaxPointsPerNode;
     size_t mParallelThresholdForInsert;
