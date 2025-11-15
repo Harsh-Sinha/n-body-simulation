@@ -188,12 +188,21 @@ void Octree::generateLeafNodeList(std::shared_ptr<Node>& node)
     }
     else
     {
+        size_t numChildren = 0;
         for (auto& octant : node->octants)
         {
             if (octant)
             {
+                ++numChildren;
                 generateLeafNodeList(octant);
             }
+        }
+
+        // reserve number of points equal to num children
+        // makes it easier for barnes hut
+        if (numChildren > 0)
+        {
+            node->points.resize(numChildren);
         }
     }
 }

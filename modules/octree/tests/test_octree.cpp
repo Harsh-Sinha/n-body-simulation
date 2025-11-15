@@ -66,7 +66,12 @@ static std::size_t countPointsInTree(const std::shared_ptr<Octree::Node>& node)
         return 0;
     }
 
-    std::size_t count = node->points.size();
+    std::size_t count = 0;
+
+    if (node->isLeafNode())
+    {
+        count += node->points.size();
+    }
     
     for (const auto& octant : node->octants)
     {
@@ -103,25 +108,28 @@ static void validateNodeRecursive(const std::shared_ptr<Octree::Node>& node,
 
     REQUIRE(node->boundingBox.halfOfSideLength > 0.0);
 
-    for (const auto& p : node->points)
+    if (node->isLeafNode())
     {
-        REQUIRE(node->boundingBox.isPointInBox(p));
+        for (const auto& p : node->points)
+        {
+            REQUIRE(node->boundingBox.isPointInBox(p));
+        }
     }
 
-    bool hasChildren = false;
+    size_t numChildren = 0;
     for (const auto& child : node->octants)
     {
         if (child)
         {
-            hasChildren = true;
+            ++numChildren;
             assertChildInsideParent(node->boundingBox, child->boundingBox);
             validateNodeRecursive(child, maxPointsPerNode, node);
         }
     }
 
-    if (hasChildren)
+    if (numChildren > 0)
     {
-        REQUIRE(node->points.empty());
+        REQUIRE(node->points.size() == numChildren);
     }
     else
     {
@@ -237,7 +245,8 @@ TEST_CASE("Insert splits node when maxPointsPerNode is small")
 
     auto root = tree.mRoot;
     REQUIRE_FALSE(root->isLeafNode());
-    REQUIRE(root->points.empty());
+
+    validateNodeRecursive(root, 1);
 
     size_t nonNullCount = 0;
     for (const auto& oct : root->octants)
