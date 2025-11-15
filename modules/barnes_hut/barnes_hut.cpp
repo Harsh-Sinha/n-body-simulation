@@ -28,6 +28,7 @@ void BarnesHut::simulate()
         calculateForce(tree.getLeafNodes(), tree.getRootNode());
 
         // update pos/vel/acc
+        updateState(tree.getLeafNodes());
     }
 }
 
@@ -126,7 +127,6 @@ void BarnesHut::calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs
 
             assert(particle);
 
-            particle->mAppliedForce = 0.0;
             calculateForce(particle, root);
         }
     }
@@ -143,7 +143,7 @@ void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_
             {
                 auto temp = std::dynamic_pointer_cast<Particle>(point);
 
-                assert(particle);
+                assert(temp);
 
                 particle->applyForce(temp);
             }
@@ -185,7 +185,7 @@ void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_
             {
                 auto temp = std::dynamic_pointer_cast<Particle>(point);
 
-                assert(particle);
+                assert(temp);
                 
                 if (temp->mId != particle->mId)
                 {
@@ -209,4 +209,36 @@ bool BarnesHut::isSufficientlyFar(const std::shared_ptr<Particle>& particle, con
     static constexpr double THETA = 0.5;
 
     return quotient < THETA;
+}
+
+void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs)
+{
+    #pragma omp parallel for schedule(dynamic)
+    for (size_t i = 0; i < leafs.size(); ++i)
+    {
+        for (auto& point : leafs[i]->points)
+        {
+            auto particle = std::dynamic_pointer_cast<Particle>(point);
+
+            assert(particle);
+
+            // update position based on last iteration of velocity and acceleration
+            auto& pos = particle->getPosition();
+            pos[0] += particle->mVelocity[0] * mDt + 0.5 * particle->mAcceleration[0] * mDt * mDt;
+            pos[1] += particle->mVelocity[1] * mDt + 0.5 * particle->mAcceleration[1] * mDt * mDt;
+            pos[2] += particle->mVelocity[2] * mDt + 0.5 * particle->mAcceleration[2] * mDt * mDt;
+
+            std::array<double, 3> prevAcceleration = particle->mAcceleration;
+
+            particle->mAcceleration[0] = particle->mAppliedForce[0] / particle->mMass;
+            particle->mAcceleration[1] = particle->mAppliedForce[1] / particle->mMass;
+            particle->mAcceleration[2] = particle->mAppliedForce[2] / particle->mMass;
+
+            particle->mVelocity[0] += 0.5 * (prevAcceleration[0] + particle->mAcceleration[0]) * mDt;
+            particle->mVelocity[1] += 0.5 * (prevAcceleration[1] + particle->mAcceleration[1]) * mDt;
+            particle->mVelocity[2] += 0.5 * (prevAcceleration[2] + particle->mAcceleration[2]) * mDt;
+
+            particle->mAppliedForce.fill(0.0);
+        }
+    }
 }

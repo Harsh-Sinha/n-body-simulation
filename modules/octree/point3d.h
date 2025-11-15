@@ -15,7 +15,7 @@ public:
 
     virtual ~Point3d() = default;
 
-    virtual const std::array<double, 3>& getPosition()
+    virtual std::array<double, 3>& getPosition()
     {
         return mPosition;
     }

@@ -29,6 +29,8 @@ private:
 
     bool isSufficientlyFar(const std::shared_ptr<Particle>& particle, const std::shared_ptr<Octree::Node>& node);
 
+    void updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs);
+
     std::vector<std::shared_ptr<Point3d>>& mParticles;
     double mDt;
     double mSimulationLength;
