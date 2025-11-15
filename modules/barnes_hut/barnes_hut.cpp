@@ -76,21 +76,28 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
 
             if (workingSet[i]->parentNode)
             {
-                // decide if I insert or another octant is inserting parent
                 size_t myOctantId = Octree::toOctantId(workingSet[i]->points[0], workingSet[i]->parentNode->boundingBox);
 
-                // place parent node in next working set if you have the lowest octant id
-                bool place = false;
-                for (size_t i = 0; i < 8; ++i)
+                // have to place this node in the parent node's points vector
+                // I have to find out which index this octant maps to to place
+                int flattenedIndex = -1;
+                for (size_t j = 0; j < 8; ++j)
                 {
-                    if (workingSet[i]->parentNode->octants[i])
+                    if (workingSet[i]->parentNode->octants[j])
                     {
-                        place = i == myOctantId;
-                        break;
+                        ++flattenedIndex;
+                        if (j == myOctantId)
+                        {
+                            break;
+                        }
                     }
                 }
 
-                if (place)
+                // these locations have been preallocated in the octree
+                workingSet[i]->parentNode->points[flattenedIndex] = workingSet[i]->points[0];
+ 
+                // smallest flattened index is always responsible for emplacing into local sets (avoid duplicates)
+                if (flattenedIndex == 0)
                 {
                     localNextSet[tid].emplace_back(workingSet[i]->parentNode);
                 }
