@@ -202,7 +202,11 @@ void Octree::generateLeafNodeList(std::shared_ptr<Node>& node)
         // makes it easier for barnes hut
         if (numChildren > 0)
         {
-            node->points.resize(numChildren);
+            node->points.reserve(numChildren);
+            for (size_t i = 0; i < numChildren; ++i)
+            {
+                node->points.emplace_back(nullptr);
+            }
         }
     }
 }
