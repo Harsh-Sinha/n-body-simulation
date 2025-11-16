@@ -252,23 +252,25 @@ void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, s
 
             assert(particle);
 
-            // update position based on last iteration of velocity and acceleration
+            // perform leapfrog integration
+
+            // x_{i+1} = x_i + v_i*dt + 0.5*a_i*dt^2
             auto& pos = particle->getPosition();
             pos[0] += particle->mVelocity[0] * mDt + 0.5 * particle->mAcceleration[0] * mDt * mDt;
             pos[1] += particle->mVelocity[1] * mDt + 0.5 * particle->mAcceleration[1] * mDt * mDt;
             pos[2] += particle->mVelocity[2] * mDt + 0.5 * particle->mAcceleration[2] * mDt * mDt;
 
-            std::array<double, 3> prevAcceleration = particle->mAcceleration;
+            // a_{i+1} = F / m
+            std::array<double, 3> updatedAcceleration = { particle->mAppliedForce[0] / particle->mMass,
+                                                          particle->mAppliedForce[1] / particle->mMass,
+                                                          particle->mAppliedForce[2] / particle->mMass };
 
-            particle->mAcceleration[0] = particle->mAppliedForce[0] / particle->mMass;
-            particle->mAcceleration[1] = particle->mAppliedForce[1] / particle->mMass;
-            particle->mAcceleration[2] = particle->mAppliedForce[2] / particle->mMass;
+            // v_{i+1} = v_i + 0.5*(a_i + a_{i+1})*dt
+            particle->mVelocity[0] += 0.5 * (particle->mAcceleration[0] + updatedAcceleration[0]) * mDt;
+            particle->mVelocity[1] += 0.5 * (particle->mAcceleration[1] + updatedAcceleration[1]) * mDt;
+            particle->mVelocity[2] += 0.5 * (particle->mAcceleration[2] + updatedAcceleration[2]) * mDt;
 
-            particle->mVelocity[0] += 0.5 * (prevAcceleration[0] + particle->mAcceleration[0]) * mDt;
-            particle->mVelocity[1] += 0.5 * (prevAcceleration[1] + particle->mAcceleration[1]) * mDt;
-            particle->mVelocity[2] += 0.5 * (prevAcceleration[2] + particle->mAcceleration[2]) * mDt;
-
-            particle->mAppliedForce.fill(0.0);
+            particle->mAcceleration = updatedAcceleration;
 
             // +1 because index 0 is the initial state of the simulation in the data store
             mDataStore.addPosition(iteration+1, particle->mId, pos);
