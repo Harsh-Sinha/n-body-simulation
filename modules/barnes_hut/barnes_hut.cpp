@@ -62,13 +62,20 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
             double y = 0;
             double z = 0;
             double totalMass = 0;
+            bool ready = true;
             for (const auto& point : workingSet[i]->points)
             {
-                auto particle = std::dynamic_pointer_cast<Particle>(point);
+                if (!point)
+                {
+                    ready = false;
+                    break;
+                }
+
+                const auto particle = std::dynamic_pointer_cast<Particle>(point);
 
                 assert(particle);
 
-                auto& pos = particle->getPosition();
+                const std::array<double, 3>& pos = particle->getPosition();
 
                 x += pos[0] * particle->mMass;
                 y += pos[1] * particle->mMass;
@@ -76,15 +83,23 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
                 totalMass += particle->mMass;
             }
 
+            if (!ready)
+            {
+                // place it back in worker queue to be processed later
+                localNextSet[tid].emplace_back(workingSet[i]);   
+            }
+
             x = x / totalMass;
             y = y / totalMass;
             z = z / totalMass;
+
+            auto particle = std::make_shared<Particle>(x, y, z, totalMass);
 
             // interior nodes have a single point representing the center of mass (do NOT clear actual particles)
             if (!workingSet[i]->isLeafNode())
             {
                 workingSet[i]->points.clear();
-                workingSet[i]->points.emplace_back(std::make_shared<Particle>(x, y, z, totalMass));
+                workingSet[i]->points.emplace_back(particle);
             }
 
             if (workingSet[i]->parentNode)
@@ -107,7 +122,7 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
                 }
 
                 // these locations have been preallocated in the octree
-                workingSet[i]->parentNode->points[flattenedIndex] = workingSet[i]->points[0];
+                workingSet[i]->parentNode->points[flattenedIndex] = particle;
  
                 // smallest flattened index is always responsible for emplacing into local sets (avoid duplicates)
                 if (flattenedIndex == 0)
