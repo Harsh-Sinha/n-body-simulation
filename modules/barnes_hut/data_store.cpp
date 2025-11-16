@@ -5,11 +5,9 @@
 namespace
 {
     template <class T>
-    std::ostream operator<<(std::ostream& os, T& t)
+    void write(std::ostream& os, T& t)
     {
         os.write(reinterpret_cast<const char*>(&t), sizeof(T));
-
-        return os;
     }
 }
 
@@ -29,21 +27,21 @@ void DataStore::writeToBinaryFile(std::string& filename)
         throw std::runtime_error("unable to open binary file to store simulation data");
     }
 
-    file << mN;
-    file << mDt;
+    write(file, mN);
+    write(file, mDt);
 
     for (const auto& mass : mMass)
     {
-        file << mass;
+        write(file, mass);
     }
 
     for (const auto& iteration : mPositions)
     {
         for (const auto& position : iteration)
         {
-            file << position[0];
-            file << position[1];
-            file << position[2];
+            write(file, position[0]);
+            write(file, position[1]);
+            write(file, position[2]);
         }
     }
 

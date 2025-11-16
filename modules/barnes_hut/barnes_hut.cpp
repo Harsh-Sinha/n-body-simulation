@@ -40,6 +40,9 @@ void BarnesHut::simulate()
         // update pos/vel/acc
         updateState(tree.getLeafNodes(), i);
     }
+
+    std::string filename = "simulation.bin";
+    mDataStore.writeToBinaryFile(filename);
 }
 
 void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>& leafs)
