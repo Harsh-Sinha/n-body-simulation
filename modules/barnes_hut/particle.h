@@ -30,7 +30,7 @@ struct Particle : public Point3d
 
     void setPosition(const std::array<double, 3>& updatedPos)
     {
-        setPosition(updatedPos[0], updatedPos[1], updatedPos[1]);
+        setPosition(updatedPos[0], updatedPos[1], updatedPos[2]);
     }
 
     void setPosition(double x, double y, double z)
@@ -43,15 +43,17 @@ struct Particle : public Point3d
     void applyForce(std::shared_ptr<Particle>& particle)
     {
         static constexpr double G = 1.0;
+        static constexpr double epsilon = 1e-8;
 
         auto& posA = getPosition();
         auto& posB = particle->getPosition();
 
-        double dx = posA[0] - posB[0];
-        double dy = posA[1] - posB[1];
-        double dz = posA[2] - posB[2];
+        double dx = posB[0] - posA[0];
+        double dy = posB[1] - posA[1];
+        double dz = posB[2] - posA[2];
 
-        double d = std::sqrt(dx*dx + dy*dy + dz*dz);
+        // epsilon used to avoid d=0.0
+        double d = std::sqrt(dx*dx + dy*dy + dz*dz) + epsilon;
 
         double force = (G *((mMass * particle->mMass) / (d*d)));
 
