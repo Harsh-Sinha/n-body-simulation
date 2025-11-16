@@ -12,7 +12,18 @@ BarnesHut::BarnesHut(std::vector<std::shared_ptr<Point3d>>& particles, double dt
     , mSimulationLength(simulationLength)
     , mSoftening(softening)
     , mNumIterations(simulationLength / dt)
-{}
+    , mDataStore(particles.size(), dt, mNumIterations)
+{
+    #pragma omp parallel for schedule(dynamic)
+    for (const auto& point : particles)
+    {
+        auto particle = std::dynamic_pointer_cast<Particle>(point);
+
+        assert(particle);
+
+        mDataStore.addMass(particle->mId, particle->mMass);
+    }
+}
 
 void BarnesHut::simulate()
 {
@@ -27,7 +38,7 @@ void BarnesHut::simulate()
         calculateForce(tree.getLeafNodes(), tree.getRootNode());
 
         // update pos/vel/acc
-        updateState(tree.getLeafNodes());
+        updateState(tree.getLeafNodes(), i);
     }
 }
 
@@ -210,7 +221,7 @@ bool BarnesHut::isSufficientlyFar(const std::shared_ptr<Particle>& particle, con
     return quotient < THETA;
 }
 
-void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs)
+void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, size_t iteration)
 {
     #pragma omp parallel for schedule(dynamic)
     for (size_t i = 0; i < leafs.size(); ++i)
@@ -238,6 +249,8 @@ void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs)
             particle->mVelocity[2] += 0.5 * (prevAcceleration[2] + particle->mAcceleration[2]) * mDt;
 
             particle->mAppliedForce.fill(0.0);
+
+            mDataStore.addPosition(iteration, particle->mId, pos);
         }
     }
 }

@@ -6,6 +6,7 @@
 #include "octree.h"
 #include "point3d.h"
 #include "particle.h"
+#include "data_store.h"
 
 class BarnesHut
 {
@@ -30,11 +31,12 @@ private:
 
     bool isSufficientlyFar(const std::shared_ptr<Particle>& particle, const std::shared_ptr<Octree::Node>& node);
 
-    void updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs);
+    void updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, size_t iteration);
 
     std::vector<std::shared_ptr<Point3d>>& mParticles;
     double mDt;
     double mSimulationLength;
     double mSoftening;
     size_t mNumIterations;
+    DataStore mDataStore;
 };
