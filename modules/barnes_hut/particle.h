@@ -42,7 +42,7 @@ struct Particle : public Point3d
 
     void applyForce(std::shared_ptr<Particle>& particle)
     {
-        static constexpr double G = 1.0;
+        static constexpr double G = -6.6743 * (10^(-11)); // meters^3 / (kilograms * seconds^2)
         static constexpr double epsilon = 1e-8;
 
         auto& posA = getPosition();
@@ -62,9 +62,9 @@ struct Particle : public Point3d
         mAppliedForce[2] += dz * force;
     }
     
-    std::array<double, 3> mVelocity;
-    std::array<double, 3> mAcceleration;
-    std::array<double, 3> mAppliedForce;
-    double mMass;
+    std::array<double, 3> mVelocity;        // meters / seconds
+    std::array<double, 3> mAcceleration;    // meters / seconds^2
+    std::array<double, 3> mAppliedForce;    // meters / seconds^2
+    double mMass;                           // kilograms
     size_t mId;
 };
