@@ -270,7 +270,8 @@ void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, s
 
             particle->mAppliedForce.fill(0.0);
 
-            mDataStore.addPosition(iteration, particle->mId, pos);
+            // +1 because index 0 is the initial state of the simulation in the data store
+            mDataStore.addPosition(iteration+1, particle->mId, pos);
         }
     }
 }
