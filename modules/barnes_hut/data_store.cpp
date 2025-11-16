@@ -13,7 +13,7 @@ namespace
 
 DataStore::DataStore(uint64_t n, double dt, uint64_t numIterations)
     : mMass(n)
-    , mPositions(numIterations, std::vector<std::array<double, 3>>(n))
+    , mPositions(numIterations+1, std::vector<std::array<double, 3>>(n))
     , mN(n)
     , mDt(dt)
 {}

@@ -22,6 +22,7 @@ BarnesHut::BarnesHut(std::vector<std::shared_ptr<Point3d>>& particles, double dt
         assert(particle);
 
         mDataStore.addMass(particle->mId, particle->mMass);
+        mDataStore.addPosition(0, particle->mId, particle->getPosition());
     }
 }
 
