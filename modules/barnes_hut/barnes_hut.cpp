@@ -86,7 +86,8 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
             if (!ready)
             {
                 // place it back in worker queue to be processed later
-                localNextSet[tid].emplace_back(workingSet[i]);   
+                localNextSet[tid].emplace_back(workingSet[i]);
+                continue;
             }
 
             x = x / totalMass;
