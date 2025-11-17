@@ -61,7 +61,7 @@ BarnesHut::BarnesHut(std::vector<std::shared_ptr<Point3d>>& particles, double dt
     #pragma omp parallel for schedule(dynamic)
     for (const auto& point : particles)
     {
-        auto particle = std::dynamic_pointer_cast<Particle>(point);
+        auto particle = std::static_pointer_cast<Particle>(point);
 
         assert(particle);
 
@@ -125,7 +125,7 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
                     break;
                 }
 
-                const auto particle = std::dynamic_pointer_cast<Particle>(point);
+                const auto particle = std::static_pointer_cast<Particle>(point);
 
                 assert(particle);
 
@@ -203,7 +203,7 @@ void BarnesHut::calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs
     {
         for (size_t j = 0; j < leafs[i]->points.size(); ++j)
         {
-            auto particle = std::dynamic_pointer_cast<Particle>(leafs[i]->points[j]);
+            auto particle = std::static_pointer_cast<Particle>(leafs[i]->points[j]);
 
             assert(particle);
 
@@ -221,7 +221,7 @@ void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_
             // use all particles in this node to apply forces on particle
             for (auto& point : node->points)
             {
-                auto temp = std::dynamic_pointer_cast<Particle>(point);
+                auto temp = std::static_pointer_cast<Particle>(point);
 
                 assert(temp);
 
@@ -231,7 +231,7 @@ void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_
         else
         {
             // estimate all particles within this octant using computed center of mass
-            auto temp = std::dynamic_pointer_cast<Particle>(node->points[0]);
+            auto temp = std::static_pointer_cast<Particle>(node->points[0]);
 
             assert(temp);
 
@@ -263,7 +263,7 @@ void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_
             // current particle will also be in this list
             for (auto& point : node->points)
             {
-                auto temp = std::dynamic_pointer_cast<Particle>(point);
+                auto temp = std::static_pointer_cast<Particle>(point);
 
                 assert(temp);
                 
@@ -298,7 +298,7 @@ void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, s
     {
         for (auto& point : leafs[i]->points)
         {
-            auto particle = std::dynamic_pointer_cast<Particle>(point);
+            auto particle = std::static_pointer_cast<Particle>(point);
 
             assert(particle);
 
