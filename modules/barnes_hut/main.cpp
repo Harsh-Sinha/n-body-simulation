@@ -10,10 +10,11 @@
 
 struct UserInput
 {
-    std::string filename;
+    std::string particleConfig;
+    std::string simulationName;
     double t;
     double simulationLength;
-    double softening;
+    bool profile = false;
 };
 
 bool parseArgs(int argc, char** argv, UserInput &out)
@@ -43,19 +44,24 @@ bool parseArgs(int argc, char** argv, UserInput &out)
             ++i;
             ++argsParsed;
         }
-        else if (a == "-s")
+        else if (a == "-p")
         {
-            if (!need(1)) return false;
-
-            out.softening = d(1);
-            ++i;
+            out.profile = true;
             ++argsParsed;
         }
-        else if (a=="-f")
+        else if (a=="-in")
         {
             if (!need(1)) return false;
         
-            out.filename = argv[i+1];
+            out.particleConfig = argv[i+1];
+            ++i;
+            ++argsParsed;
+        }
+        else if (a=="-out")
+        {
+            if (!need(1)) return false;
+        
+            out.simulationName = argv[i+1];
             ++i;
             ++argsParsed;
         }
@@ -65,7 +71,7 @@ bool parseArgs(int argc, char** argv, UserInput &out)
         }
     }
 
-    return argsParsed == 4;
+    return argsParsed >= 4;
 }
 
 int main(int argc, char* argv[])
@@ -75,7 +81,7 @@ int main(int argc, char* argv[])
 
     if (success)
     {
-        auto inputParticles = ParticleConfig::parse(input.filename);
+        auto inputParticles = ParticleConfig::parse(input.particleConfig);
 
         std::vector<std::shared_ptr<Point3d>> particles;
         for (const auto& particle : inputParticles)
@@ -83,15 +89,17 @@ int main(int argc, char* argv[])
             particles.emplace_back(std::make_shared<Particle>(particle));
         }
 
-        BarnesHut bh(particles, input.t, input.simulationLength, input.softening);
+        BarnesHut bh(particles, input.t, input.simulationLength, input.simulationName, input.profile);
         bh.simulate();
     }
     else
     {
-        std::cout << "Usage: ./b_hut -t A -s B -f file_name" << std::endl;
+        std::cout << "Usage: ./b_hut -t A -l B -in particleConfig -out simulationName -p" << std::endl;
         std::cout << "A - time step (s)" << std::endl;
-        std::cout << "B - softening factor" << std::endl;
-        std::cout << "file_name - particle config file to use" << std::endl;
+        std::cout << "B - length of simulation (s)" << std::endl;
+        std::cout << "particleConfig - particle config file for the simulation" << std::endl;
+        std::cout << "simulationName - name to be assigned to this simulation... no spaces and file extension" << std::endl;
+        std::cout << "-p - optional flag that turns on profiling for barnes hut" << std::endl;
     }
 
     return 0;

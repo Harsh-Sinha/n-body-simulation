@@ -12,7 +12,7 @@ class BarnesHut
 {
 public:
     BarnesHut(std::vector<std::shared_ptr<Point3d>>& particles, double dt, 
-              double simulationLength, double softening);
+              double simulationLength, std::string& simulationName, bool profile);
     
     ~BarnesHut() = default;
 
@@ -36,7 +36,8 @@ private:
     std::vector<std::shared_ptr<Point3d>>& mParticles;
     double mDt;
     double mSimulationLength;
-    double mSoftening;
+    std::string mSimulationName;
+    bool mProfile;
     size_t mNumIterations;
     DataStore mDataStore;
 };

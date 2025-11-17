@@ -6,11 +6,12 @@
 #include <omp.h>
 
 BarnesHut::BarnesHut(std::vector<std::shared_ptr<Point3d>>& particles, double dt, 
-                     double simulationLength, double softening)
+                     double simulationLength, std::string& simulationName, bool profile)
     : mParticles(particles)
     , mDt(dt)
     , mSimulationLength(simulationLength)
-    , mSoftening(softening)
+    , mSimulationName(simulationName)
+    , mProfile(profile)
     , mNumIterations(simulationLength / dt)
     , mDataStore(particles.size(), dt, mNumIterations)
 {
@@ -42,7 +43,7 @@ void BarnesHut::simulate()
         updateState(tree.getLeafNodes(), i);
     }
 
-    std::string filename = "simulation.bin";
+    std::string filename = mSimulationName + ".bin";
     mDataStore.writeToBinaryFile(filename);
 }
 
