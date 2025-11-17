@@ -2,8 +2,51 @@
 
 #include <cmath>
 #include <cassert>
+#include <chrono>
 
 #include <omp.h>
+
+namespace
+{
+
+class ScopedTimer
+{
+public:
+    ScopedTimer(double& out)
+        : mStart(std::chrono::high_resolution_clock::now())
+        , mOut(out)
+    {}
+
+    void recordElapsedMs()
+    {
+        auto end = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double, std::milli> elapsed_ms = end - mStart;
+
+        mOut = elapsed_ms.count();
+    }
+
+    ~ScopedTimer() = default;
+
+private:
+    ScopedTimer() = default;
+
+    std::chrono::high_resolution_clock::time_point mStart;
+    double& mOut;
+};
+
+
+#define COMBINE(a, b) a##b
+#define PROFILE(sectionId, functionCall) \
+    double COMBINE(elapsed_, sectionId) = 0.0; \
+    ScopedTimer COMBINE(timer_, sectionId)(COMBINE(elapsed_, sectionId)); \
+    functionCall; \
+    COMBINE(timer_, sectionId).recordElapsedMs(); \
+    if (mProfile) \
+    { \
+        mDataStore.addProfileData(sectionId, COMBINE(elapsed_, sectionId)); \
+    } 
+}
 
 BarnesHut::BarnesHut(std::vector<std::shared_ptr<Point3d>>& particles, double dt, 
                      double simulationLength, std::string& simulationName, bool profile)
@@ -31,20 +74,26 @@ void BarnesHut::simulate()
 {
     for (size_t i = 0; i < mNumIterations; ++i)
     {
-        Octree tree(mParticles, true);
+        PROFILE(0, Octree tree(mParticles, true));
 
         // calculate center of mass
-        calculateCenterOfMass(tree.getLeafNodes());
+        PROFILE(1, calculateCenterOfMass(tree.getLeafNodes()));
 
         // apply forces
-        calculateForce(tree.getLeafNodes(), tree.getRootNode());
+        PROFILE(2, calculateForce(tree.getLeafNodes(), tree.getRootNode()));
 
         // update pos/vel/acc
-        updateState(tree.getLeafNodes(), i);
+        PROFILE(3, updateState(tree.getLeafNodes(), i));
     }
 
     std::string filename = mSimulationName + ".bin";
     mDataStore.writeToBinaryFile(filename);
+
+    if (mProfile)
+    {
+        filename = mSimulationName + ".txt";
+        mDataStore.writeProfileData(filename);
+    }
 }
 
 void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>& leafs)

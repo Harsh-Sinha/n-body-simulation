@@ -36,13 +36,23 @@ public:
         mPositions[iteration][id] = position;
     }
 
+    inline void addProfileData(uint64_t section, double time)
+    {
+        mProfileData[section] += time;
+    }
+
     void writeToBinaryFile(std::string& filename);
+
+    void writeProfileData(std::string& filename);
 
 private:
     DataStore() = default;
 
     std::vector<double> mMass;
     std::vector<std::vector<std::array<double, 3>>> mPositions;
+    std::array<double, 4> mProfileData;
+    uint64_t mNumIterations;
     uint64_t mN;
     double mDt;
+    
 };
