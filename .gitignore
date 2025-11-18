@@ -1,3 +1,6 @@
+# simulation html
+*.html
+
 # temporary testing folder
 Testing/
 
