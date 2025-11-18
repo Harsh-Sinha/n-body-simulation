@@ -74,7 +74,7 @@ void BarnesHut::simulate()
 {
     for (size_t i = 0; i < mNumIterations; ++i)
     {
-        PROFILE(0, Octree tree(mParticles, true));
+        PROFILE(0, Octree tree(mParticles, true, 5000, 1));
 
         // calculate center of mass
         PROFILE(1, calculateCenterOfMass(tree.getLeafNodes()));
@@ -198,7 +198,7 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
 
 void BarnesHut::calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs, std::shared_ptr<Octree::Node>& root)
 {
-    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for
     for (size_t i = 0; i < leafs.size(); ++i)
     {
         for (size_t j = 0; j < leafs[i]->points.size(); ++j)
