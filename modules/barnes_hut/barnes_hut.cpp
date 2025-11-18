@@ -154,7 +154,11 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
             if (!workingSet[i]->isLeafNode())
             {
                 workingSet[i]->points.clear();
-                workingSet[i]->points.emplace_back(particle);
+                workingSet[i]->com[0] = x;
+                workingSet[i]->com[1] = y;
+                workingSet[i]->com[2] = z;
+                workingSet[i]->totalMass = totalMass;
+                //workingSet[i]->points.emplace_back(particle);
             }
 
             if (workingSet[i]->parentNode)
@@ -231,11 +235,7 @@ void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_
         else
         {
             // estimate all particles within this octant using computed center of mass
-            auto temp = std::static_pointer_cast<Particle>(node->points[0]);
-
-            assert(temp);
-
-            particle->applyForce(temp);
+            particle->applyForce(node->com, node->totalMass);
         }
     }
     else
@@ -281,7 +281,7 @@ bool BarnesHut::isSufficientlyFar(const std::shared_ptr<Particle>& particle, con
     double s = node->boundingBox.halfOfSideLength * 2.0;
 
     auto& posA = particle->getPosition();
-    auto& posB = node->points[0]->getPosition();
+    auto& posB = node->com;
     double d = std::sqrt(std::pow(posA[0] - posB[0], 2) + std::pow(posA[1] - posB[1], 2) + std::pow(posA[2] - posB[2], 2));
 
     double quotient = s / d;

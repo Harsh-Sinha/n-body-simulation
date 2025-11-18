@@ -40,13 +40,20 @@ struct Particle : public Point3d
         mPosition[2] = z;
     }
 
+
+
     void applyForce(std::shared_ptr<Particle>& particle)
+    {
+        applyForce(particle->getPosition(), particle->mMass);
+    }
+
+    void applyForce(std::array<double, 3>& com, double& mass)
     {
         static constexpr double G = -6.6743 * (10^(-11)); // meters^3 / (kilograms * seconds^2)
         static constexpr double epsilon = 1e-8;
 
         auto& posA = getPosition();
-        auto& posB = particle->getPosition();
+        auto& posB = com;
 
         double dx = posB[0] - posA[0];
         double dy = posB[1] - posA[1];
@@ -55,7 +62,7 @@ struct Particle : public Point3d
         // epsilon used to avoid d=0.0
         double d = std::sqrt(dx*dx + dy*dy + dz*dz) + epsilon;
 
-        double force = (G *((mMass * particle->mMass) / (d*d)));
+        double force = (G *((mMass * mass) / (d*d)));
 
         mAppliedForce[0] += dx * force;
         mAppliedForce[1] += dy * force;

@@ -44,7 +44,9 @@ public:
         std::array<std::shared_ptr<Node>, 8> octants;
         std::vector<std::shared_ptr<Point3d>> points;
         std::shared_ptr<Node> parentNode;
-        
+        std::array<double, 3> com;
+        double totalMass = 0;
+
         bool isLeafNode() const
         {
             bool isLeaf = true;
