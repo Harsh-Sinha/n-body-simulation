@@ -188,13 +188,16 @@ void Octree::generateLeafNodeList(std::shared_ptr<Node>& node)
     }
     else
     {
+        // morton order traversal based on my octant ordering
+        static constexpr std::array<size_t, 8> MORTON_ORDER = {6, 7, 5, 4, 2, 3, 1, 0};
+        
         size_t numChildren = 0;
-        for (auto& octant : node->octants)
+        for (const auto octantId : MORTON_ORDER)
         {
-            if (octant)
+            if (node->octants[octantId])
             {
                 ++numChildren;
-                generateLeafNodeList(octant);
+                generateLeafNodeList(node->octants[octantId]);
             }
         }
 

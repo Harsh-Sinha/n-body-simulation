@@ -202,7 +202,7 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
 
 void BarnesHut::calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs, std::shared_ptr<Octree::Node>& root)
 {
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic)
     for (size_t i = 0; i < leafs.size(); ++i)
     {
         for (size_t j = 0; j < leafs[i]->points.size(); ++j)

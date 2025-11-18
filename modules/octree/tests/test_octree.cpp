@@ -7,7 +7,6 @@
 #define private public
 #define protected public
 #include "octree.h"
-#include "node_lock.h"
 #undef private
 #undef protected
 
