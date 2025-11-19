@@ -6,7 +6,7 @@ add_library(${OCTREE_LIB} STATIC octree.cpp)
 
 target_include_directories(${OCTREE_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(${OCTREE_LIB} PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(${OCTREE_LIB} PUBLIC ParticleConfig OpenMP::OpenMP_CXX)
 
 install(TARGETS ${OCTREE_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 

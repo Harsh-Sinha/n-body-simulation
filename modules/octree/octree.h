@@ -5,7 +5,7 @@
 #include <array> 
 #include <cmath> 
 
-#include "point3d.h" 
+#include "particle.h" 
 
 static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 5;
 // when node contains <= number of points switch to serial insert algorithm
@@ -14,7 +14,7 @@ static constexpr size_t PARALLEL_THRESHOLD_FOR_INSERT = 5000;
 class Octree 
 { 
 public:
-    Octree(std::vector<std::shared_ptr<Point3d>>& points, 
+    Octree(std::vector<std::shared_ptr<Particle>>& points, 
            bool supportMultithread = false,
            size_t parallelThresholdForInsert = PARALLEL_THRESHOLD_FOR_INSERT,
            size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
@@ -25,10 +25,10 @@ public:
         std::array<double, 3> center{0.0, 0.0, 0.0};
         double halfOfSideLength = 0.0; 
         
-        bool isPointInBox(const std::shared_ptr<Point3d>& point) const
+        bool isPointInBox(const std::shared_ptr<Particle>& point) const
         {
             bool inBox = true;
-            auto& p = point->getPosition();
+            auto& p = point->mPosition;
             
             inBox = inBox && std::abs(p[0] - center[0]) <= halfOfSideLength;
             inBox = inBox && std::abs(p[1] - center[1]) <= halfOfSideLength;
@@ -42,7 +42,7 @@ public:
     { 
         BoundingBox boundingBox; 
         std::array<std::shared_ptr<Node>, 8> octants;
-        std::vector<std::shared_ptr<Point3d>> points;
+        std::vector<std::shared_ptr<Particle>> points;
         std::shared_ptr<Node> parentNode;
         std::array<double, 3> com;
         double totalMass = 0;
@@ -60,9 +60,9 @@ public:
         }
     };
 
-    static inline size_t toOctantId(const std::shared_ptr<Point3d>& point, const BoundingBox& box)
+    static inline size_t toOctantId(const std::shared_ptr<Particle>& point, const BoundingBox& box)
     {
-        auto& p = point->getPosition();
+        auto& p = point->mPosition;
 
         // decide if point is in upper or lower quadrant
         size_t id = (p[2] >= box.center[2]) ? 0 : 4;
@@ -97,16 +97,16 @@ public:
 private: 
     Octree() = default;
 
-    BoundingBox computeBoundingBox(std::vector<std::shared_ptr<Point3d>>& points);
+    BoundingBox computeBoundingBox(std::vector<std::shared_ptr<Particle>>& points);
 
-    void insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point);
+    void insert(std::shared_ptr<Node>& node, std::shared_ptr<Particle>& point);
 
     void insertParallel(std::shared_ptr<Node>& node);
 
     BoundingBox createChildBox(size_t index, const BoundingBox& parent);
 
     // assumes that a reader/writer lock is already held
-    inline std::shared_ptr<Node>& getCorrespondingOctant(const std::shared_ptr<Point3d>& point, std::shared_ptr<Node>& node)
+    inline std::shared_ptr<Node>& getCorrespondingOctant(const std::shared_ptr<Particle>& point, std::shared_ptr<Node>& node)
     {
         size_t octandId = toOctantId(point, node->boundingBox);
         if (node->octants[octandId]) return node->octants[octandId];

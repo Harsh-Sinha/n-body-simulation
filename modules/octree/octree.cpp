@@ -4,7 +4,7 @@
 #include <limits> 
 #include <omp.h>
 
-Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultithread, 
+Octree::Octree(std::vector<std::shared_ptr<Particle>>& points, bool supportMultithread, 
                size_t parallelThresholdForInsert, size_t maxPointsPerNode) 
     : mSupportMultithread(supportMultithread)
     , mMaxPointsPerNode(maxPointsPerNode)
@@ -39,7 +39,7 @@ Octree::Octree(std::vector<std::shared_ptr<Point3d>>& points, bool supportMultit
     generateLeafNodeList(mRoot);
 }
 
-Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<Point3d>>& points)
+Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<Particle>>& points)
 { 
     double minX = std::numeric_limits<double>::infinity();
     double minY = std::numeric_limits<double>::infinity();
@@ -51,7 +51,7 @@ Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<Point
 
     for (const auto& point : points)
     {
-        auto& pos = point->getPosition();
+        auto& pos = point->mPosition;
 
         minX = std::min(minX, pos[0]);
         minY = std::min(minY, pos[1]);
@@ -74,7 +74,7 @@ Octree::BoundingBox Octree::computeBoundingBox(std::vector<std::shared_ptr<Point
     return box;
 }
 
-void Octree::insert(std::shared_ptr<Node>& node, std::shared_ptr<Point3d>& point)
+void Octree::insert(std::shared_ptr<Node>& node, std::shared_ptr<Particle>& point)
 {
     if (node->isLeafNode() && node->points.size() >= mMaxPointsPerNode)
     {
@@ -106,7 +106,7 @@ void Octree::insertParallel(std::shared_ptr<Node>& node)
 
     if (node->points.size() < mParallelThresholdForInsert)
     {
-        std::vector<std::shared_ptr<Point3d>> temp;
+        std::vector<std::shared_ptr<Particle>> temp;
         temp.swap(node->points);
 
         for (auto& point : temp)
