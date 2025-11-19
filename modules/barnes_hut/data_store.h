@@ -22,6 +22,16 @@ public:
         mMass[id] = mass;
     }
 
+    inline std::vector<std::array<double, 3>>& getIterationStore(uint64_t iteration)
+    {
+        if (iteration >= mPositions.size())
+        {
+            throw std::runtime_error("trying to insert iteration out of range");
+        }
+        
+        return mPositions[iteration];
+    }
+
     inline void addPosition(uint64_t iteration, uint64_t id, std::array<double, 3>& position)
     {
         if (iteration >= mPositions.size())
