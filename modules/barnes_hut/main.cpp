@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     {
         auto inputParticles = ParticleConfig::parse(input.particleConfig);
 
-        std::vector<std::shared_ptr<Point3d>> particles;
+        std::vector<std::shared_ptr<Particle>> particles;
         for (const auto& particle : inputParticles)
         {
             particles.emplace_back(std::make_shared<Particle>(particle));

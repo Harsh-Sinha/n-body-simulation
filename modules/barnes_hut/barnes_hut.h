@@ -4,14 +4,13 @@
 #include <memory>
 
 #include "octree.h"
-#include "point3d.h"
 #include "particle.h"
 #include "data_store.h"
 
 class BarnesHut
 {
 public:
-    BarnesHut(std::vector<std::shared_ptr<Point3d>>& particles, double dt, 
+    BarnesHut(std::vector<std::shared_ptr<Particle>>& particles, double dt, 
               double simulationLength, std::string& simulationName, bool profile);
     
     ~BarnesHut() = default;
@@ -27,13 +26,13 @@ private:
 
     void calculateForce(std::shared_ptr<Particle>& particle, std::shared_ptr<Octree::Node>& node);
 
-    void calculateForce(std::shared_ptr<Particle>& particle, std::shared_ptr<Point3d> node);
+    void calculateForce(std::shared_ptr<Particle>& particle, std::shared_ptr<Particle> node);
 
     bool isSufficientlyFar(const std::shared_ptr<Particle>& particle, const std::shared_ptr<Octree::Node>& node);
 
     void updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, size_t iteration);
 
-    std::vector<std::shared_ptr<Point3d>>& mParticles;
+    std::vector<std::shared_ptr<Particle>>& mParticles;
     double mDt;
     double mSimulationLength;
     std::string mSimulationName;

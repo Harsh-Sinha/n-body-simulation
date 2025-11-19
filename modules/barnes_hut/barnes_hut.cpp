@@ -48,7 +48,7 @@ private:
     } 
 }
 
-BarnesHut::BarnesHut(std::vector<std::shared_ptr<Point3d>>& particles, double dt, 
+BarnesHut::BarnesHut(std::vector<std::shared_ptr<Particle>>& particles, double dt, 
                      double simulationLength, std::string& simulationName, bool profile)
     : mParticles(particles)
     , mDt(dt)
@@ -59,14 +59,10 @@ BarnesHut::BarnesHut(std::vector<std::shared_ptr<Point3d>>& particles, double dt
     , mDataStore(particles.size(), dt, mNumIterations)
 {
     #pragma omp parallel for schedule(dynamic)
-    for (const auto& point : particles)
+    for (const auto& particle : particles)
     {
-        auto particle = std::static_pointer_cast<Particle>(point);
-
-        assert(particle);
-
         mDataStore.addMass(particle->mId, particle->mMass);
-        mDataStore.addPosition(0, particle->mId, particle->getPosition());
+        mDataStore.addPosition(0, particle->mId, particle->mPosition);
     }
 }
 
@@ -117,19 +113,15 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
             double z = 0;
             double totalMass = 0;
             bool ready = true;
-            for (const auto& point : workingSet[i]->points)
+            for (const auto& particle : workingSet[i]->points)
             {
-                if (!point)
+                if (!particle)
                 {
                     ready = false;
                     break;
                 }
 
-                const auto particle = std::static_pointer_cast<Particle>(point);
-
-                assert(particle);
-
-                const std::array<double, 3>& pos = particle->getPosition();
+                const std::array<double, 3>& pos = particle->mPosition;
 
                 x += pos[0] * particle->mMass;
                 y += pos[1] * particle->mMass;
@@ -147,8 +139,6 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
             x = x / totalMass;
             y = y / totalMass;
             z = z / totalMass;
-
-            auto particle = std::make_shared<Particle>(x, y, z, totalMass);
 
             // interior nodes have a single point representing the center of mass (do NOT clear actual particles)
             if (!workingSet[i]->isLeafNode())
@@ -181,7 +171,7 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
                 }
 
                 // these locations have been preallocated in the octree
-                workingSet[i]->parentNode->points[flattenedIndex] = particle;
+                workingSet[i]->parentNode->points[flattenedIndex] = std::make_shared<Particle>(x, y, z, totalMass);
  
                 // smallest flattened index is always responsible for emplacing into local sets (avoid duplicates)
                 if (flattenedIndex == 0)
@@ -207,11 +197,7 @@ void BarnesHut::calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs
     {
         for (size_t j = 0; j < leafs[i]->points.size(); ++j)
         {
-            auto particle = std::static_pointer_cast<Particle>(leafs[i]->points[j]);
-
-            assert(particle);
-
-            calculateForce(particle, root);
+            calculateForce(leafs[i]->points[j], root);
         }
     }
 }
@@ -225,11 +211,7 @@ void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_
             // use all particles in this node to apply forces on particle
             for (auto& point : node->points)
             {
-                auto temp = std::static_pointer_cast<Particle>(point);
-
-                assert(temp);
-
-                particle->applyForce(temp);
+                particle->applyForce(point);
             }
         }
         else
@@ -263,13 +245,9 @@ void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_
             // current particle will also be in this list
             for (auto& point : node->points)
             {
-                auto temp = std::static_pointer_cast<Particle>(point);
-
-                assert(temp);
-                
-                if (temp->mId != particle->mId)
+                if (point->mId != particle->mId)
                 {
-                    particle->applyForce(temp);
+                    particle->applyForce(point);
                 }
             }
         }
@@ -280,7 +258,7 @@ bool BarnesHut::isSufficientlyFar(const std::shared_ptr<Particle>& particle, con
 {
     double s = node->boundingBox.halfOfSideLength * 2.0;
 
-    auto& posA = particle->getPosition();
+    auto& posA = particle->mPosition;
     auto& posB = node->com;
     double d = std::sqrt(std::pow(posA[0] - posB[0], 2) + std::pow(posA[1] - posB[1], 2) + std::pow(posA[2] - posB[2], 2));
 
@@ -303,19 +281,14 @@ void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, s
     #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < leafs.size(); ++i)
     {
-        for (auto& point : leafs[i]->points)
+        for (auto& particle : leafs[i]->points)
         {
-            auto particle = std::static_pointer_cast<Particle>(point);
-
-            assert(particle);
-
             // perform leapfrog integration
 
             // x_{i+1} = x_i + v_i*dt + 0.5*a_i*dt^2
-            auto& pos = particle->getPosition();
-            pos[0] += particle->mVelocity[0] * mDt + halfDtSquared * particle->mAcceleration[0];
-            pos[1] += particle->mVelocity[1] * mDt + halfDtSquared * particle->mAcceleration[1];
-            pos[2] += particle->mVelocity[2] * mDt + halfDtSquared * particle->mAcceleration[2];
+            particle->mPosition[0] += particle->mVelocity[0] * mDt + halfDtSquared * particle->mAcceleration[0];
+            particle->mPosition[1] += particle->mVelocity[1] * mDt + halfDtSquared * particle->mAcceleration[1];
+            particle->mPosition[2] += particle->mVelocity[2] * mDt + halfDtSquared * particle->mAcceleration[2];
 
             // a_{i+1} = F / m
             double inverseMass = 1.0 / particle->mMass;
@@ -332,7 +305,7 @@ void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, s
             particle->mAcceleration[1] = ayUpdated;
             particle->mAcceleration[2] = azUpdated;
 
-            iterationStore[particle->mId] = pos;
+            iterationStore[particle->mId] = particle->mPosition;
         }
     }
 }
