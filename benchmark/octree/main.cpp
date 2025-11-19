@@ -26,7 +26,7 @@ private:
     double& mOut;
 };
 
-double benchmark(std::vector<std::shared_ptr<Point3d>>& points, bool parallel, size_t threshold, size_t iterations)
+double benchmark(std::vector<std::shared_ptr<Particle>>& points, bool parallel, size_t threshold, size_t iterations)
 {
     double cumulative = 0.0;
     for (int i = 0; i < iterations; ++i)
@@ -52,10 +52,10 @@ int main(int argc, char* argv[])
                 
     auto generated = ParticleConfig::generate(1000000, limits);
     
-    std::vector<std::shared_ptr<Point3d>> particles;
+    std::vector<std::shared_ptr<Particle>> particles;
     for (const auto& particle : generated)
     {
-        particles.emplace_back(std::make_shared<Point3d>(particle.position[0], particle.position[1], particle.position[2]));
+        particles.emplace_back(std::make_shared<Particle>(particle));
     }
 
     // find when serial is more efficient than parallel
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
     for (const auto& size : sizes)
     {
-        std::vector<std::shared_ptr<Point3d>> temp;
+        std::vector<std::shared_ptr<Particle>> temp;
         temp.insert(temp.end(), particles.begin(), particles.begin() + size);
 
         std::cout << size << ", ";

@@ -24,7 +24,7 @@ static std::filesystem::path base()
 
 static std::shared_ptr<Particle> makePoint(double x, double y, double z)
 {
-    return std::make_shared<Particle>(x, y, z);
+    return std::make_shared<Particle>(x, y, z, 0.0);
 }
 
 static void validateLeafNodesList(const Octree& tree, const size_t expectedPoints)
@@ -83,7 +83,7 @@ static std::size_t countPointsInTree(const std::shared_ptr<Octree::Node>& node)
 static void assertChildInsideParent(const Octree::BoundingBox& parent,
                                     const Octree::BoundingBox& child)
 {
-    auto childCenter = std::make_shared<Particle>(child.center[0], child.center[1], child.center[2]);
+    auto childCenter = std::make_shared<Particle>(child.center[0], child.center[1], child.center[2], 0.0);
     REQUIRE(parent.isPointInBox(childCenter));
 
     REQUIRE(child.halfOfSideLength == Catch::Approx(0.5 * parent.halfOfSideLength));
@@ -373,7 +373,7 @@ TEST_CASE("Parallel Octree generation with large input size")
     std::vector<std::shared_ptr<Particle>> pts;
     for (const auto& particle : particles)
     {
-        pts.emplace_back(std::make_shared<Particle>(particle.position[0], particle.position[1], particle.position[2]));
+        pts.emplace_back(std::make_shared<Particle>(particle.position[0], particle.position[1], particle.position[2], 0.0));
     }
 
     Octree tree(pts, true);
