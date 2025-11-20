@@ -97,9 +97,16 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
     std::vector<std::shared_ptr<Octree::Node>> workingSet;
     workingSet.insert(workingSet.end(), leafs.begin(), leafs.end());
 
+    // ensure that each of local vectors are aligned on different cache lines
+    // will help different threads from invalidating cache lines other threads need
+    struct alignas(64) ThreadData
+    {
+        std::vector<std::shared_ptr<Octree::Node>> nextSet;
+        std::vector<std::unique_ptr<Particle>> toDelete;
+    };
+
     auto numThreads = omp_get_max_threads();
-    std::vector<std::vector<std::shared_ptr<Octree::Node>>> localNextSet(numThreads);
-    std::vector<std::vector<std::unique_ptr<Particle>>> localToDelete(numThreads);
+    std::vector<ThreadData> data(numThreads);
 
     while (!workingSet.empty())
     {
@@ -133,7 +140,7 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
             if (!ready)
             {
                 // place it back in worker queue to be processed later
-                localNextSet[tid].emplace_back(workingSet[i]);
+                data[tid].nextSet.emplace_back(workingSet[i]);
                 continue;
             }
 
@@ -172,28 +179,28 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
                 }
 
                 // these locations have been preallocated in the octree
-                localToDelete[tid].emplace_back(std::make_unique<Particle>(x, y, z, totalMass));
-                workingSet[i]->parentNode->points[flattenedIndex] = localToDelete[tid].back().get();
+                data[tid].toDelete.emplace_back(std::make_unique<Particle>(x, y, z, totalMass));
+                workingSet[i]->parentNode->points[flattenedIndex] = data[tid].toDelete.back().get();
  
                 // smallest flattened index is always responsible for emplacing into local sets (avoid duplicates)
                 if (flattenedIndex == 0)
                 {
-                    localNextSet[tid].emplace_back(workingSet[i]->parentNode);
+                    data[tid].nextSet.emplace_back(workingSet[i]->parentNode);
                 }
             }
         }
 
         workingSet.clear();
-        for (auto& nextSet : localNextSet)
+        for (auto& d : data)
         {
-            workingSet.insert(workingSet.end(), nextSet.begin(), nextSet.end());
-            nextSet.clear();
+            workingSet.insert(workingSet.end(), d.nextSet.begin(), d.nextSet.end());
+            d.nextSet.clear();
         }
     }
 
-    for (auto& toDelete : localToDelete)
+    for (auto& d : data)
     {
-        for (auto& ptr : toDelete)
+        for (auto& ptr : d.toDelete)
         {
             ptr.reset();
         }
