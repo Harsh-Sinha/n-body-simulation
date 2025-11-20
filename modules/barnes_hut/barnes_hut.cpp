@@ -103,7 +103,7 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
 
     while (!workingSet.empty())
     {
-        #pragma omp parallel for schedule(dynamic)
+        #pragma omp parallel for schedule(static)
         for (size_t i = 0; i < workingSet.size(); ++i)
         {
             auto tid = omp_get_thread_num();
