@@ -83,14 +83,19 @@ int main(int argc, char* argv[])
     {
         auto inputParticles = ParticleConfig::parse(input.particleConfig);
 
-        std::vector<std::shared_ptr<Particle>> particles;
+        std::vector<Particle*> particles;
         for (const auto& particle : inputParticles)
         {
-            particles.emplace_back(std::make_shared<Particle>(particle));
+            particles.emplace_back(new Particle(particle));
         }
 
         BarnesHut bh(particles, input.t, input.simulationLength, input.simulationName, input.profile);
         bh.simulate();
+
+        for (auto* particle : particles)
+        {
+            delete particle;
+        }
     }
     else
     {

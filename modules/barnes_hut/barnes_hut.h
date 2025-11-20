@@ -10,7 +10,7 @@
 class BarnesHut
 {
 public:
-    BarnesHut(std::vector<std::shared_ptr<Particle>>& particles, double dt, 
+    BarnesHut(std::vector<Particle*>& particles, double dt, 
               double simulationLength, std::string& simulationName, bool profile);
     
     ~BarnesHut() = default;
@@ -24,15 +24,13 @@ private:
 
     void calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs, std::shared_ptr<Octree::Node>& root);
 
-    void calculateForce(std::shared_ptr<Particle>& particle, std::shared_ptr<Octree::Node>& node);
+    void calculateForce(Particle*& particle, std::shared_ptr<Octree::Node>& node);
 
-    void calculateForce(std::shared_ptr<Particle>& particle, std::shared_ptr<Particle> node);
-
-    bool isSufficientlyFar(const std::shared_ptr<Particle>& particle, const std::shared_ptr<Octree::Node>& node);
+    bool isSufficientlyFar(Particle*& particle, const std::shared_ptr<Octree::Node>& node);
 
     void updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, size_t iteration);
 
-    std::vector<std::shared_ptr<Particle>>& mParticles;
+    std::vector<Particle*>& mParticles;
     double mDt;
     double mSimulationLength;
     std::string mSimulationName;

@@ -48,7 +48,7 @@ private:
     } 
 }
 
-BarnesHut::BarnesHut(std::vector<std::shared_ptr<Particle>>& particles, double dt, 
+BarnesHut::BarnesHut(std::vector<Particle*>& particles, double dt, 
                      double simulationLength, std::string& simulationName, bool profile)
     : mParticles(particles)
     , mDt(dt)
@@ -99,6 +99,7 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
 
     auto numThreads = omp_get_max_threads();
     std::vector<std::vector<std::shared_ptr<Octree::Node>>> localNextSet(numThreads);
+    std::vector<std::vector<std::unique_ptr<Particle>>> localToDelete(numThreads);
 
     while (!workingSet.empty())
     {
@@ -143,7 +144,7 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
             // interior nodes have a single point representing the center of mass (do NOT clear actual particles)
             if (!workingSet[i]->isLeafNode())
             {
-                workingSet[i]->points.clear();
+                //workingSet[i]->points.clear();
                 workingSet[i]->com[0] = x;
                 workingSet[i]->com[1] = y;
                 workingSet[i]->com[2] = z;
@@ -171,7 +172,8 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
                 }
 
                 // these locations have been preallocated in the octree
-                workingSet[i]->parentNode->points[flattenedIndex] = std::make_shared<Particle>(x, y, z, totalMass);
+                localToDelete[tid].emplace_back(std::make_unique<Particle>(x, y, z, totalMass));
+                workingSet[i]->parentNode->points[flattenedIndex] = localToDelete[tid].back().get();
  
                 // smallest flattened index is always responsible for emplacing into local sets (avoid duplicates)
                 if (flattenedIndex == 0)
@@ -188,6 +190,14 @@ void BarnesHut::calculateCenterOfMass(std::vector<std::shared_ptr<Octree::Node>>
             nextSet.clear();
         }
     }
+
+    for (auto& toDelete : localToDelete)
+    {
+        for (auto& ptr : toDelete)
+        {
+            ptr.reset();
+        }
+    }
 }
 
 void BarnesHut::calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs, std::shared_ptr<Octree::Node>& root)
@@ -202,7 +212,7 @@ void BarnesHut::calculateForce(std::vector<std::shared_ptr<Octree::Node>>& leafs
     }
 }
 
-void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_ptr<Octree::Node>& node)
+void BarnesHut::calculateForce(Particle*& particle, std::shared_ptr<Octree::Node>& node)
 {
     if (!node->boundingBox.isPointInBox(particle) && isSufficientlyFar(particle, node))
     {
@@ -254,7 +264,7 @@ void BarnesHut::calculateForce(std::shared_ptr<Particle>& particle, std::shared_
     }
 }
 
-bool BarnesHut::isSufficientlyFar(const std::shared_ptr<Particle>& particle, const std::shared_ptr<Octree::Node>& node)
+bool BarnesHut::isSufficientlyFar(Particle*& particle, const std::shared_ptr<Octree::Node>& node)
 {
     double s = node->boundingBox.halfOfSideLength * 2.0;
 

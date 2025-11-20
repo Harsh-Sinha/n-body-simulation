@@ -22,9 +22,9 @@ static std::filesystem::path base()
     return std::filesystem::canonical(std::filesystem::path(__FILE__)).parent_path();
 }
 
-static std::shared_ptr<Particle> makePoint(double x, double y, double z)
+static Particle* makePoint(double x, double y, double z)
 {
-    return std::make_shared<Particle>(x, y, z, 0.0);
+    return new Particle(x, y, z, 0.0);
 }
 
 static void validateLeafNodesList(const Octree& tree, const size_t expectedPoints)
@@ -84,7 +84,8 @@ static void assertChildInsideParent(const Octree::BoundingBox& parent,
                                     const Octree::BoundingBox& child)
 {
     auto childCenter = std::make_shared<Particle>(child.center[0], child.center[1], child.center[2], 0.0);
-    REQUIRE(parent.isPointInBox(childCenter));
+    auto* p = childCenter.get();
+    REQUIRE(parent.isPointInBox(p));
 
     REQUIRE(child.halfOfSideLength == Catch::Approx(0.5 * parent.halfOfSideLength));
 }
@@ -109,7 +110,7 @@ static void validateNodeRecursive(const std::shared_ptr<Octree::Node>& node,
 
     if (node->isLeafNode())
     {
-        for (const auto& p : node->points)
+        for (auto* p : node->points)
         {
             REQUIRE(node->boundingBox.isPointInBox(p));
         }
@@ -139,7 +140,7 @@ static void validateNodeRecursive(const std::shared_ptr<Octree::Node>& node,
 
 TEST_CASE("Bounding box is computed correctly for simple cube")
 {
-    std::vector<std::shared_ptr<Particle>> pts;
+    std::vector<Particle*> pts;
     pts.push_back(makePoint(0.0, 0.0, 0.0));
     pts.push_back(makePoint(1.0, 1.0, 1.0));
 
@@ -155,11 +156,16 @@ TEST_CASE("Bounding box is computed correctly for simple cube")
     REQUIRE(box.center[2] == Catch::Approx(0.5));
 
     REQUIRE(box.halfOfSideLength == Catch::Approx(0.5005).epsilon(1e-6));
+
+    for (auto* p : pts)
+    {
+        delete p;
+    }
 }
 
 TEST_CASE("Node reports leaf status correctly")
 {
-    std::vector<std::shared_ptr<Particle>> pts{ makePoint(0,0,0) };
+    std::vector<Particle*> pts{ makePoint(0,0,0) };
     Octree tree(pts, false, 5);
 
     auto root = tree.mRoot;
@@ -167,11 +173,13 @@ TEST_CASE("Node reports leaf status correctly")
 
     root->octants[0] = std::make_shared<Octree::Node>();
     REQUIRE_FALSE(root->isLeafNode());
+
+    delete pts[0];
 }
 
 TEST_CASE("BoundingBox::isPointInBox respects padding")
 {
-    std::vector<std::shared_ptr<Particle>> pts{
+    std::vector<Particle*> pts{
         makePoint(-1, -1, -1),
         makePoint( 1,  1,  1)
     };
@@ -180,11 +188,15 @@ TEST_CASE("BoundingBox::isPointInBox respects padding")
 
     auto onEdge = makePoint(1, 1, 1);
     REQUIRE(box.isPointInBox(onEdge));
+
+    delete pts[0];
+    delete pts[1];
+    delete onEdge;
 }
 
 TEST_CASE("toOctantId assigns all 8 octants correctly")
 {
-    std::vector<std::shared_ptr<Particle>> pts{
+    std::vector<Particle*> pts{
         makePoint(-1, -1, -1),
         makePoint( 1,  1,  1)
     };
@@ -193,26 +205,45 @@ TEST_CASE("toOctantId assigns all 8 octants correctly")
     auto box = root->boundingBox;
 
     // (+,+,+) -> 0
-    REQUIRE(tree.toOctantId(makePoint( 1,  1,  1), box) == 0);
+    auto* temp = makePoint( 1,  1,  1);
+    REQUIRE(tree.toOctantId(temp, box) == 0);
+    delete temp;
     // (-,+,+) -> 1
-    REQUIRE(tree.toOctantId(makePoint(-1,  1,  1), box) == 1);
+    temp = makePoint(-1,  1,  1);
+    REQUIRE(tree.toOctantId(temp, box) == 1);
+    delete temp;
     // (-,-,+) -> 2
-    REQUIRE(tree.toOctantId(makePoint(-1, -1,  1), box) == 2);
+    temp = makePoint(-1,  -1,  1);
+    REQUIRE(tree.toOctantId(temp, box) == 2);
+    delete temp;
     // (+,-,+) -> 3
-    REQUIRE(tree.toOctantId(makePoint( 1, -1,  1), box) == 3);
+    temp = makePoint(1,  -1,  1);
+    REQUIRE(tree.toOctantId(temp, box) == 3);
+    delete temp;
     // (+,+,-) -> 4
-    REQUIRE(tree.toOctantId(makePoint( 1,  1, -1), box) == 4);
+    temp = makePoint(1, 1, -1);
+    REQUIRE(tree.toOctantId(temp, box) == 4);
+    delete temp;
     // (-,+,-) -> 5
-    REQUIRE(tree.toOctantId(makePoint(-1,  1, -1), box) == 5);
+    temp = makePoint(-1, 1, -1);
+    REQUIRE(tree.toOctantId(temp, box) == 5);
+    delete temp;
     // (-,-,-) -> 6
-    REQUIRE(tree.toOctantId(makePoint(-1, -1, -1), box) == 6);
+    temp = makePoint(-1, -1, -1);
+    REQUIRE(tree.toOctantId(temp, box) == 6);
+    delete temp;
     // (+,-,-) -> 7
-    REQUIRE(tree.toOctantId(makePoint( 1, -1, -1), box) == 7);
+    temp = makePoint(1,  -1,  -1);
+    REQUIRE(tree.toOctantId(temp, box) == 7);
+    delete temp;
+
+    delete pts[0];
+    delete pts[1];
 }
 
 TEST_CASE("getCorrespondingOctant lazily creates child and sets parent")
 {
-    std::vector<std::shared_ptr<Particle>> pts{ makePoint(0,0,0), makePoint(1,1,1) };
+    std::vector<Particle*> pts{ makePoint(0,0,0), makePoint(1,1,1) };
     Octree tree(pts, false, 5);
 
     auto root = tree.mRoot;
@@ -225,11 +256,15 @@ TEST_CASE("getCorrespondingOctant lazily creates child and sets parent")
     // calling again for same point should give same node, not a new one
     auto& childRef2 = tree.getCorrespondingOctant(p, root);
     REQUIRE(childRef2 == childRef);
+
+    delete pts[0];
+    delete pts[1];
+    delete p;
 }
 
 TEST_CASE("Insert splits node when maxPointsPerNode is small")
 {
-    std::vector<std::shared_ptr<Particle>> pts{
+    std::vector<Particle*> pts{
         makePoint( 1,  1,  1),
         makePoint(-1,  1,  1),
         makePoint(-1, -1,  1),
@@ -258,11 +293,16 @@ TEST_CASE("Insert splits node when maxPointsPerNode is small")
         }
     }
     REQUIRE(nonNullCount == 8);
+
+    for (auto* p : pts)
+    {
+        delete p;
+    }
 }
 
 TEST_CASE("Octree should handle empty point sets")
 {
-    std::vector<std::shared_ptr<Particle>> empty;
+    std::vector<Particle*> empty;
 
     REQUIRE_THROWS(Octree(empty));
 }
@@ -271,7 +311,7 @@ TEST_CASE("Large octree (≈500 pts) forms a valid spatial subdivision")
 {
     // build a 3D grid of points in [-1, 1]^3
     // 8 * 8 * 8 = 512; we can take 500 of them
-    std::vector<std::shared_ptr<Particle>> pts;
+    std::vector<Particle*> pts;
     pts.reserve(500);
 
     int added = 0;
@@ -308,15 +348,20 @@ TEST_CASE("Large octree (≈500 pts) forms a valid spatial subdivision")
     REQUIRE(depth > 0);
     REQUIRE(depth < 20);
 
-    for (const auto& p : pts)
+    for (auto* p : pts)
     {
         REQUIRE(root->boundingBox.isPointInBox(p));
+    }
+
+    for (auto* p : pts)
+    {
+        delete p;
     }
 }
 
 TEST_CASE("Octree handles highly clustered points plus distant outliers")
 {
-    std::vector<std::shared_ptr<Particle>> pts;
+    std::vector<Particle*> pts;
     pts.reserve(500);
 
     // big cluster of points near origin =450 points in a tiny cube around (0,0,0)
@@ -355,7 +400,7 @@ TEST_CASE("Octree handles highly clustered points plus distant outliers")
 
     validateLeafNodesList(tree, total);
 
-    for (const auto& p : pts)
+    for (auto* p : pts)
     {
         REQUIRE(root->boundingBox.isPointInBox(p));
     }
@@ -363,6 +408,11 @@ TEST_CASE("Octree handles highly clustered points plus distant outliers")
     int depth = computeMaxDepth(root);
     REQUIRE(depth >= 3);
     REQUIRE(depth < 25);
+
+    for (auto* p : pts)
+    {
+        delete p;
+    }
 }
 
 TEST_CASE("Parallel Octree generation with large input size")
@@ -370,10 +420,10 @@ TEST_CASE("Parallel Octree generation with large input size")
     std::filesystem::path file = base() / "inputs" / "test_particle_config_parallel_tree.txt";
     auto particles = ParticleConfig::parse(file.string());
 
-    std::vector<std::shared_ptr<Particle>> pts;
+    std::vector<Particle*> pts;
     for (const auto& particle : particles)
     {
-        pts.emplace_back(std::make_shared<Particle>(particle.position[0], particle.position[1], particle.position[2], 0.0));
+        pts.emplace_back(new Particle(particle.position[0], particle.position[1], particle.position[2], 0.0));
     }
 
     Octree tree(pts, true);
@@ -387,8 +437,13 @@ TEST_CASE("Parallel Octree generation with large input size")
 
     validateLeafNodesList(tree, total);
 
-    for (const auto& p : pts)
+    for (auto* p : pts)
     {
         REQUIRE(root->boundingBox.isPointInBox(p));
+    }
+
+    for (auto* p : pts)
+    {
+        delete p;
     }
 }

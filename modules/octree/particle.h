@@ -27,7 +27,7 @@ struct Particle
         
     virtual ~Particle() = default;
 
-    void applyForce(std::shared_ptr<Particle>& particle)
+    void applyForce(Particle*& particle)
     {
         applyForce(particle->mPosition, particle->mMass);
     }

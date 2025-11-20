@@ -11,10 +11,13 @@ static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 5;
 // when node contains <= number of points switch to serial insert algorithm
 static constexpr size_t PARALLEL_THRESHOLD_FOR_INSERT = 5000;
 
+// valgrind will report possiblly lost memory for all these function calls
+// because they are raw pointers... but look at assumption above constructor
 class Octree 
 { 
 public:
-    Octree(std::vector<std::shared_ptr<Particle>>& points, 
+    // assume that pointers are valid for as long as tree is used
+    Octree(std::vector<Particle*>& points,
            bool supportMultithread = false,
            size_t parallelThresholdForInsert = PARALLEL_THRESHOLD_FOR_INSERT,
            size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
@@ -25,7 +28,7 @@ public:
         std::array<double, 3> center{0.0, 0.0, 0.0};
         double halfOfSideLength = 0.0; 
         
-        bool isPointInBox(const std::shared_ptr<Particle>& point) const
+        bool isPointInBox(Particle*& point) const
         {
             bool inBox = true;
             auto& p = point->mPosition;
@@ -42,7 +45,7 @@ public:
     { 
         BoundingBox boundingBox; 
         std::array<std::shared_ptr<Node>, 8> octants;
-        std::vector<std::shared_ptr<Particle>> points;
+        std::vector<Particle*> points;
         std::shared_ptr<Node> parentNode;
         std::array<double, 3> com;
         double totalMass = 0;
@@ -60,7 +63,7 @@ public:
         }
     };
 
-    static inline size_t toOctantId(const std::shared_ptr<Particle>& point, const BoundingBox& box)
+    static inline size_t toOctantId(Particle*& point, const BoundingBox& box)
     {
         auto& p = point->mPosition;
 
@@ -97,16 +100,16 @@ public:
 private: 
     Octree() = default;
 
-    BoundingBox computeBoundingBox(std::vector<std::shared_ptr<Particle>>& points);
+    BoundingBox computeBoundingBox(std::vector<Particle*>& points);
 
-    void insert(std::shared_ptr<Node>& node, std::shared_ptr<Particle>& point);
+    void insert(std::shared_ptr<Node>& node, Particle*& point);
 
     void insertParallel(std::shared_ptr<Node>& node);
 
     BoundingBox createChildBox(size_t index, const BoundingBox& parent);
 
     // assumes that a reader/writer lock is already held
-    inline std::shared_ptr<Node>& getCorrespondingOctant(const std::shared_ptr<Particle>& point, std::shared_ptr<Node>& node)
+    inline std::shared_ptr<Node>& getCorrespondingOctant(Particle*& point, std::shared_ptr<Node>& node)
     {
         size_t octandId = toOctantId(point, node->boundingBox);
         if (node->octants[octandId]) return node->octants[octandId];
@@ -129,4 +132,5 @@ private:
     bool mSupportMultithread;
     size_t mMaxPointsPerNode;
     size_t mParallelThresholdForInsert;
+    std::vector<Particle*> mRawParticles;
 };
