@@ -131,7 +131,8 @@ def main():
             y = [r[2][field] for r in subset]
 
             plt.figure(figsize=(10, 6))
-            plt.plot(x, y, marker="o")
+            # skip plotting the serial timing
+            plt.plot(x[1:], y[1:], marker="o")
 
             # Add point labels
             for xi, yi in zip(x, y):
@@ -146,7 +147,7 @@ def main():
 
             plt.xlabel("Thread Count")
             plt.ylabel("Time (ms)")
-            plt.title(f"{field} vs Thread Count (Particles = {particles})")
+            plt.title(f"{field} vs Thread Count (Particles = {particles}, Serial = {y[0]})")
             plt.grid(True)
             plt.tight_layout()
 
