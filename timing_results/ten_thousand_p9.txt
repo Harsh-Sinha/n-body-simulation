@@ -1,6 +1,6 @@
 all times in milliseconds
-octree creation: 3.81009
-center of mass calculation: 4.77967
-applying forces calculation: 14.1991
-update pos/vel/acc: 0.22727
-overall: 23.0162
+octree creation: 3.88925
+center of mass calculation: 3.1497
+applying forces calculation: 14.1945
+update pos/vel/acc: 0.233703
+overall: 21.4671
