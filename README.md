@@ -1,7 +1,9 @@
 # n-body-simulation
 ## TODO
 make sure you do  
-`git submodule update --init --recursive`
+`git submodule update --init --recursive`  
+command to build rn:  
+`cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=install -DALEMBIC_SHARED_LIBS=OFF -DENABLE_TESTING=OFF -DUSE_TESTS=OFF -B debug`
 ## build
 To configure the cmake build system execute the following commands. Note: inside a command there may be `[]` which indicate a user has to make a choice to make use of.  
 `cmake -DCMAKE_BUILD_TYPE=[Release/Debug] -DCMAKE_INSTALL_PREFIX=install -DENABLE_TESTING=[TRUE/FALSE] -B build`  
