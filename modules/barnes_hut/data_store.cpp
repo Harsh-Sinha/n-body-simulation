@@ -2,6 +2,10 @@
 
 #include <fstream>
 
+#include "Alembic/AbcGeom/All.h"
+#include "Alembic/Abc/All.h"
+#include "Alembic/AbcCoreOgawa/All.h"
+
 namespace
 {
     template <class T>
@@ -23,33 +27,65 @@ DataStore::DataStore(uint64_t n, double dt, uint64_t numIterations)
 
 void DataStore::writeToBinaryFile(std::string& filename)
 {
-    std::ofstream file(filename, std::ios::binary);
+    Alembic::Abc::OArchive archive(Alembic::AbcCoreOgawa::WriteArchive(), filename);
 
-    if (!file.is_open())
+    Alembic::Abc::OObject topObj = archive.getTop();
+
+    // create native point cloud object
+    Alembic::AbcGeom::OPoints pointsObj(topObj, "particles");
+    Alembic::AbcGeom::OPointsSchema &pointsSchema = pointsObj.getSchema();
+
+    // normalize masses
+    float minMass = *std::min_element(mMass.begin(), mMass.end());
+    float maxMass = *std::max_element(mMass.begin(), mMass.end());
+    float range   = maxMass - minMass;
+    for (auto& mass : mMass)
     {
-        throw std::runtime_error("unable to open binary file to store simulation data");
+        // normalize to [0, 5]
+        mass = ((mass - minMass) / range) * 10.0; 
     }
 
-    write(file, mN);
-    write(file, mDt);
+    // create mass information
+    Alembic::Abc::FloatArraySample widthSample(mMass.data(), mMass.size());
+    Alembic::AbcGeom::v12::OFloatGeomParam::Sample widths;
+    widths.setVals(widthSample);
 
-    for (const auto& mass : mMass)
+    // map particle ids
+    std::vector<Alembic::Abc::uint64_t> ids(mMass.size());
+    for (size_t i = 0; i < ids.size(); ++i)
     {
-        write(file, mass);
+        ids[i] = static_cast<Alembic::Abc::uint64_t>(i);
     }
 
-    for (const auto& iteration : mPositions)
+    // loop over every iteration and create a frame for it
+    bool firstFrame = true;
+    for (auto& iteration : mPositions)
     {
-        for (const auto& position : iteration)
+        // alembic requires 32 bit floating point NOT 64 bit
+        std::vector<Alembic::AbcGeom::V3f> positions(iteration.size());
+        for (size_t i = 0; i < iteration.size(); ++i)
         {
-            write(file, position[0]);
-            write(file, position[1]);
-            write(file, position[2]);
+            positions[i] = Alembic::AbcGeom::V3f( static_cast<float>(iteration[i][0]),
+                                                  static_cast<float>(iteration[i][1]),
+                                                  static_cast<float>(iteration[i][2]) );
         }
+
+        Alembic::AbcGeom::V3fArraySample positionsSample(positions.data(), positions.size());
+
+        // construct frame
+        Alembic::AbcGeom::OPointsSchema::Sample sample;
+        sample.setPositions(positionsSample);
+        sample.setWidths(widths);
+
+        if (firstFrame)
+        {
+            sample.setIds(ids);
+            firstFrame = false;
+        }
+
+        // commit frame to storage
+        pointsSchema.set(sample);
     }
-
-
-    file.close();
 }
 
 void DataStore::writeProfileData(std::string& filename)

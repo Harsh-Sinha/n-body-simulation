@@ -82,7 +82,7 @@ void BarnesHut::simulate()
         PROFILE(3, updateState(tree.getLeafNodes(), i));
     }
 
-    std::string filename = mSimulationName + ".bin";
+    std::string filename = mSimulationName + ".abc";
     mDataStore.writeToBinaryFile(filename);
 
     if (mProfile)

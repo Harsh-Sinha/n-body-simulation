@@ -19,7 +19,7 @@ public:
             throw std::runtime_error("trying to insert mass for particle id out of range");
         }
 
-        mMass[id] = mass;
+        mMass[id] = static_cast<float>(mass);
     }
 
     inline std::vector<std::array<double, 3>>& getIterationStore(uint64_t iteration)
@@ -58,7 +58,8 @@ public:
 private:
     DataStore() = default;
 
-    std::vector<double> mMass;
+    // store as float because alembic requires float
+    std::vector<float> mMass;
     std::vector<std::vector<std::array<double, 3>>> mPositions;
     std::array<double, 4> mProfileData;
     uint64_t mNumIterations;

@@ -4,3 +4,9 @@
 [submodule "external/barnes-hut-simulation"]
 	path = external/barnes-hut-simulation
 	url = git@github.com:Harsh-Sinha/barnes-hut-simulation.git
+[submodule "external/alembic"]
+	path = external/alembic
+	url = https://github.com/alembic/alembic.git
+[submodule "external/imath"]
+	path = external/imath
+	url = https://github.com/AcademySoftwareFoundation/Imath.git
