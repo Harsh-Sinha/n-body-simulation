@@ -29,7 +29,7 @@ rm particle_ten_thousand_p9.txt
 rm particle_hundred_thousand_p9.txt
 rm particle_five_hundred_thousand_p9.txt
 rm particle_million_p9.txt
-rm ten_thousand_p9.bin
-rm hundred_thousand_p9.bin
-rm five_hundred_thousand_p9.bin
-rm million_p9.bin
+rm ten_thousand_p9.abc
+rm hundred_thousand_p9.abc
+rm five_hundred_thousand_p9.abc
+rm million_p9.abc
