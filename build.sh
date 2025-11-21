@@ -14,4 +14,4 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install -DALEMBIC_SHARED
 
 cmake --build build
 
-cmake --built build --target install
+cmake --build build --target install
