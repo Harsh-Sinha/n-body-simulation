@@ -59,10 +59,10 @@ BarnesHut::BarnesHut(std::vector<Particle*>& particles, double dt,
     , mDataStore(particles.size(), dt, mNumIterations)
 {
     #pragma omp parallel for schedule(dynamic)
-    for (const auto& particle : particles)
+    for (size_t i = 0; i < particles.size(); ++i)
     {
-        mDataStore.addMass(particle->mId, particle->mMass);
-        mDataStore.addPosition(0, particle->mId, particle->mPosition);
+        mDataStore.addMass(particles[i]->mId, particles[i]->mMass);
+        mDataStore.addPosition(0, particles[i]->mId, particles[i]->mPosition);
     }
 }
 
