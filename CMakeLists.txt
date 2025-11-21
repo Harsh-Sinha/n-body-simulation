@@ -24,6 +24,7 @@ add_custom_target(configure_imath
         -S ${CMAKE_SOURCE_DIR}/external/imath
         -B ${CMAKE_BINARY_DIR}/imath_temp
         -DBUILD_SHARED_LIBS=OFF
+        -DBUILD_TESTING=OFF
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}/third_party
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
