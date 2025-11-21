@@ -1,4 +1,9 @@
 # n-body-simulation
+```
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=install -DALEMBIC_SHARED_LIBS=OFF -DENABLE_TESTING=OFF -DUSE_TESTS=OFF -B debug   
+cmake --build debug -j 2    
+cmake --build debug --target install -j 2
+```
 ## TODO
 make sure you do  
 `git submodule update --init --recursive`  
