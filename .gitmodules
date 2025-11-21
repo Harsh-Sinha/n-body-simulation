@@ -1,9 +1,9 @@
 [submodule "external/Catch2"]
 	path = external/Catch2
-	url = git@github.com:catchorg/Catch2.git
+	url = https://github.com/catchorg/Catch2.git
 [submodule "external/barnes-hut-simulation"]
 	path = external/barnes-hut-simulation
-	url = git@github.com:Harsh-Sinha/barnes-hut-simulation.git
+	url = https://github.com/Harsh-Sinha/barnes-hut-simulation.git
 [submodule "external/alembic"]
 	path = external/alembic
 	url = https://github.com/alembic/alembic.git
