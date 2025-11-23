@@ -31,8 +31,12 @@ void DataStore::writeToBinaryFile(std::string& filename)
 
     Alembic::Abc::OObject topObj = archive.getTop();
 
+    // create time stamps for accurate simulation
+    Alembic::Abc::TimeSampling timeSampling(mDt, 0.0);
+    Alembic::Abc::uint32_t timestamps = archive.addTimeSampling(timeSampling);
+
     // create native point cloud object
-    Alembic::AbcGeom::OPoints pointsObj(topObj, "particles");
+    Alembic::AbcGeom::OPoints pointsObj(topObj, "particles", timestamps);
     Alembic::AbcGeom::OPointsSchema &pointsSchema = pointsObj.getSchema();
 
     // normalize masses
