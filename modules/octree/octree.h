@@ -1,11 +1,10 @@
 #pragma once
 
-#include <vector> 
-#include <memory> 
-#include <array> 
+#include <vector>
+#include <array>
 #include <cmath> 
 
-#include "particle.h" 
+#include "particle.h"
 
 static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 5;
 // when node contains <= number of points switch to serial insert algorithm
@@ -13,15 +12,15 @@ static constexpr size_t PARALLEL_THRESHOLD_FOR_INSERT = 5000;
 
 // valgrind will report possiblly lost memory for all these function calls
 // because they are raw pointers... but look at assumption above constructor
-class Octree 
-{ 
+class Octree
+{
 public:
     // assume that pointers are valid for as long as tree is used
     Octree(std::vector<Particle*>& points,
            bool supportMultithread = false,
            size_t parallelThresholdForInsert = PARALLEL_THRESHOLD_FOR_INSERT,
            size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
-    ~Octree() = default;
+    ~Octree();
 
     struct BoundingBox
     {
@@ -44,9 +43,9 @@ public:
     struct Node
     { 
         BoundingBox boundingBox; 
-        std::array<std::shared_ptr<Node>, 8> octants;
+        std::array<Node*, 8> octants;
         std::vector<Particle*> points;
-        std::shared_ptr<Node> parentNode;
+        Node* parentNode;
         std::array<double, 3> com;
         double totalMass = 0;
 
@@ -87,12 +86,12 @@ public:
         return id;
     }
 
-    inline std::vector<std::shared_ptr<Node>>& getLeafNodes()
+    inline std::vector<Node*>& getLeafNodes()
     {
         return mLeafNodes;
     }
 
-    inline std::shared_ptr<Node>& getRootNode()
+    inline Node*& getRootNode()
     {
         return mRoot;
     }
@@ -100,16 +99,18 @@ public:
 private: 
     Octree() = default;
 
+    void freeNode(Node*& node);
+
     BoundingBox computeBoundingBox(std::vector<Particle*>& points);
 
-    void insert(std::shared_ptr<Node>& node, Particle*& point);
+    void insert(Node*& node, Particle*& point);
 
-    void insertParallel(std::shared_ptr<Node>& node);
+    void insertParallel(Node*& node);
 
     BoundingBox createChildBox(size_t index, const BoundingBox& parent);
 
     // assumes that a reader/writer lock is already held
-    inline std::shared_ptr<Node>& getCorrespondingOctant(Particle*& point, std::shared_ptr<Node>& node)
+    inline Node*& getCorrespondingOctant(Particle*& point, Node*& node)
     {
         size_t octandId = toOctantId(point, node->boundingBox);
         if (node->octants[octandId]) return node->octants[octandId];
@@ -117,7 +118,7 @@ private:
         // create new leaf node if needed
         if (node->octants[octandId] == nullptr)
         {   
-            node->octants[octandId] = std::make_shared<Node>();
+            node->octants[octandId] = new Node();
             node->octants[octandId]->boundingBox = createChildBox(octandId, node->boundingBox);
             node->octants[octandId]->parentNode = node;
         }
@@ -125,10 +126,10 @@ private:
         return node->octants[octandId];
     }
 
-    void generateLeafNodeList(std::shared_ptr<Node>& node);
+    void generateLeafNodeList(Node*& node);
 
-    std::shared_ptr<Node> mRoot = std::make_shared<Node>();
-    std::vector<std::shared_ptr<Node>> mLeafNodes;
+    Node* mRoot = new Node();
+    std::vector<Node*> mLeafNodes;
     bool mSupportMultithread;
     size_t mMaxPointsPerNode;
     size_t mParallelThresholdForInsert;

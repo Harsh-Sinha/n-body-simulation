@@ -39,6 +39,35 @@ Octree::Octree(std::vector<Particle*>& points, bool supportMultithread,
     generateLeafNodeList(mRoot);
 }
 
+Octree::~Octree()
+{
+    freeNode(mRoot);
+}
+
+void Octree::freeNode(Node*& node)
+{
+    if (node == nullptr) return;
+
+    bool isLeaf = true;
+    for (auto*& octant : node->octants)
+    {
+        if (octant)
+        {
+            isLeaf = false;
+            freeNode(octant);
+            delete octant;
+        }
+    }
+
+    if (!isLeaf)
+    {
+        for (auto*& pt : node->points)
+        {
+            delete pt;
+        }
+    }
+}
+
 Octree::BoundingBox Octree::computeBoundingBox(std::vector<Particle*>& points)
 { 
     double minX = std::numeric_limits<double>::infinity();
@@ -74,14 +103,14 @@ Octree::BoundingBox Octree::computeBoundingBox(std::vector<Particle*>& points)
     return box;
 }
 
-void Octree::insert(std::shared_ptr<Node>& node, Particle*& point)
+void Octree::insert(Node*& node, Particle*& point)
 {
     if (node->isLeafNode() && node->points.size() >= mMaxPointsPerNode)
     {
         // have to make this an interior node and push all points down the octree
         for (size_t i = 0; i < node->points.size(); ++i)
         {
-            std::shared_ptr<Node>& octant = getCorrespondingOctant(node->points[i], node);
+            Node*& octant = getCorrespondingOctant(node->points[i], node);
             insert(octant, node->points[i]);
         }
         node->points.clear();
@@ -94,12 +123,12 @@ void Octree::insert(std::shared_ptr<Node>& node, Particle*& point)
     else
     {
         // keep traversing down the octree to place
-        std::shared_ptr<Node>& octant = getCorrespondingOctant(point, node);
+        Node*& octant = getCorrespondingOctant(point, node);
         insert(octant, point);
     }
 }
 
-void Octree::insertParallel(std::shared_ptr<Node>& node)
+void Octree::insertParallel(Node*& node)
 {
     if (node == nullptr) return;
     if (node->points.size() <= mMaxPointsPerNode) return;
@@ -128,7 +157,7 @@ void Octree::insertParallel(std::shared_ptr<Node>& node)
         {
             if (elementsPerOctant[octantId] > 0)
             {
-                node->octants[octantId] = std::make_shared<Node>();
+                node->octants[octantId] = new Node();
                 node->octants[octantId]->boundingBox = createChildBox(octantId, node->boundingBox);
                 node->octants[octantId]->parentNode = node;
 
@@ -141,7 +170,7 @@ void Octree::insertParallel(std::shared_ptr<Node>& node)
         for (size_t i = 0; i < node->points.size(); ++i)
         {
             size_t octantId = toOctantId(node->points[i], node->boundingBox);
-            std::shared_ptr<Node>& child = node->octants[octantId];
+            Node*& child = node->octants[octantId];
             child->points[index[octantId]] = node->points[i];
             ++index[octantId];
         }
@@ -178,7 +207,7 @@ Octree::BoundingBox Octree::createChildBox(size_t index, const BoundingBox& pare
     return child;
 }
 
-void Octree::generateLeafNodeList(std::shared_ptr<Node>& node)
+void Octree::generateLeafNodeList(Node*& node)
 {
     if (node == nullptr) return;
 
@@ -203,13 +232,10 @@ void Octree::generateLeafNodeList(std::shared_ptr<Node>& node)
 
         // reserve number of points equal to num children
         // makes it easier for barnes hut
-        if (numChildren > 0)
+        node->points.reserve(numChildren);
+        for (size_t i = 0; i < numChildren; ++i)
         {
-            node->points.reserve(numChildren);
-            for (size_t i = 0; i < numChildren; ++i)
-            {
-                node->points.emplace_back(nullptr);
-            }
+            node->points.emplace_back(new Particle());
         }
     }
 }
