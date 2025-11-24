@@ -25,7 +25,7 @@ struct Particle
         , mId(0)
     {}
         
-    virtual ~Particle() = default;
+    ~Particle() = default;
 
     void applyForce(Particle*& particle)
     {
