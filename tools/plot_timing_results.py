@@ -2,6 +2,7 @@ import os
 import re
 import argparse
 import matplotlib.pyplot as plt
+import math
 
 def parse_filename(filename):
     particleMap = {
@@ -30,6 +31,20 @@ def parse_file(path):
                 name, value = line.split(":")
                 data[name.strip()] = float(value.strip())
     return data
+
+def determine_big_o_coeff(field, x, y):
+    denom = 0.0
+    if field == "octree creation" or field == "overall" or field == "applying forces calculation":
+        # O(nlogn) algorithms
+        denom = x * math.log(x, 10)
+    elif field == "center of mass calculation":
+        # O(8^logn) algorithm
+        denom = 8.0 ** (math.log(x, 10))
+    else: # field == "update pos/vel/acc" 
+        # O(n) algorithms
+        denom = x
+
+    return y / denom
 
 def main():
     parser = argparse.ArgumentParser(description="plot profiling data.")
@@ -90,6 +105,8 @@ def main():
             plt.figure(figsize=(10, 6))
             plt.plot(x, y, marker="o")
 
+            coeffs = ''
+
             # Add point labels
             for xi, yi in zip(x, y):
                 plt.text(
@@ -100,6 +117,8 @@ def main():
                     ha="left",
                     va="bottom"
                 )
+                c = determine_big_o_coeff(field, xi, yi)
+                coeffs += f"n={xi} coeff={c:.4f}\n"
 
             plt.xlabel("Particle Count")
             plt.ylabel("Time (ms)")
@@ -113,6 +132,10 @@ def main():
 
             plt.savefig(os.path.join(threadDir, filename))
             plt.close()
+
+            filename = f"{safeField}.txt"
+            with open(os.path.join(threadDir, filename), "w") as file:
+                file.write(coeffs)
 
     # fix particle count and plot speedup
     for particles in particleValues:
