@@ -28,7 +28,7 @@ private:
 
     bool isSufficientlyFar(Particle*& particle, const std::shared_ptr<Octree::Node>& node);
 
-    void updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, size_t iteration);
+    void updateState(size_t iteration);
 
     std::vector<Particle*>& mParticles;
     double mDt;

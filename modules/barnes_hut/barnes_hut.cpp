@@ -79,7 +79,7 @@ void BarnesHut::simulate()
         PROFILE(2, calculateForce(tree.getLeafNodes(), tree.getRootNode()));
 
         // update pos/vel/acc
-        PROFILE(3, updateState(tree.getLeafNodes(), i));
+        PROFILE(3, updateState(i));
     }
 
     std::string filename = mSimulationName + ".abc";
@@ -279,7 +279,7 @@ bool BarnesHut::isSufficientlyFar(Particle*& particle, const std::shared_ptr<Oct
     return quotient < THETA;
 }
 
-void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, size_t iteration)
+void BarnesHut::updateState(size_t iteration)
 {
     // +1 because index 0 is the initial state of the simulation in the data store
     auto& iterationStore = mDataStore.getIterationStore(iteration + 1);
@@ -289,33 +289,35 @@ void BarnesHut::updateState(std::vector<std::shared_ptr<Octree::Node>>& leafs, s
     const double halfDtSquared = halfDt * mDt;
 
     #pragma omp parallel for schedule(static)
-    for (size_t i = 0; i < leafs.size(); ++i)
+    for (auto& particle : mParticles)
     {
-        for (auto& particle : leafs[i]->points)
-        {
-            // perform leapfrog integration
+        // perform leapfrog integration
 
-            // x_{i+1} = x_i + v_i*dt + 0.5*a_i*dt^2
-            particle->mPosition[0] += particle->mVelocity[0] * mDt + halfDtSquared * particle->mAcceleration[0];
-            particle->mPosition[1] += particle->mVelocity[1] * mDt + halfDtSquared * particle->mAcceleration[1];
-            particle->mPosition[2] += particle->mVelocity[2] * mDt + halfDtSquared * particle->mAcceleration[2];
+        // x_{i+1} = x_i + v_i*dt + 0.5*a_i*dt^2
+        particle->mPosition[0] += particle->mVelocity[0] * mDt + halfDtSquared * particle->mAcceleration[0];
+        particle->mPosition[1] += particle->mVelocity[1] * mDt + halfDtSquared * particle->mAcceleration[1];
+        particle->mPosition[2] += particle->mVelocity[2] * mDt + halfDtSquared * particle->mAcceleration[2];
 
-            // a_{i+1} = F / m
-            double inverseMass = 1.0 / particle->mMass;
-            double axUpdated = particle->mAppliedForce[0] * inverseMass;
-            double ayUpdated = particle->mAppliedForce[1] * inverseMass;
-            double azUpdated = particle->mAppliedForce[2] * inverseMass;
+        // a_{i+1} = F / m
+        double inverseMass = 1.0 / particle->mMass;
+        double axUpdated = particle->mAppliedForce[0] * inverseMass;
+        double ayUpdated = particle->mAppliedForce[1] * inverseMass;
+        double azUpdated = particle->mAppliedForce[2] * inverseMass;
 
-            // v_{i+1} = v_i + 0.5*(a_i + a_{i+1})*dt
-            particle->mVelocity[0] += halfDt * (particle->mAcceleration[0] + axUpdated);
-            particle->mVelocity[1] += halfDt * (particle->mAcceleration[1] + ayUpdated);
-            particle->mVelocity[2] += halfDt * (particle->mAcceleration[2] + azUpdated);
+        // v_{i+1} = v_i + 0.5*(a_i + a_{i+1})*dt
+        particle->mVelocity[0] += halfDt * (particle->mAcceleration[0] + axUpdated);
+        particle->mVelocity[1] += halfDt * (particle->mAcceleration[1] + ayUpdated);
+        particle->mVelocity[2] += halfDt * (particle->mAcceleration[2] + azUpdated);
 
-            particle->mAcceleration[0] = axUpdated;
-            particle->mAcceleration[1] = ayUpdated;
-            particle->mAcceleration[2] = azUpdated;
+        particle->mAcceleration[0] = axUpdated;
+        particle->mAcceleration[1] = ayUpdated;
+        particle->mAcceleration[2] = azUpdated;
 
-            iterationStore[particle->mId] = particle->mPosition;
-        }
+        // clear out particle force
+        particle->mAppliedForce[0] = 0.0;
+        particle->mAppliedForce[1] = 0.0;
+        particle->mAppliedForce[2] = 0.0;
+
+        iterationStore[particle->mId] = particle->mPosition;
     }
 }
