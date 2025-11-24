@@ -34,7 +34,7 @@ struct Particle
 
     void applyForce(std::array<double, 3>& com, double& mass)
     {
-        static constexpr double G = -6.6743 * (10^(-11)); // meters^3 / (kilograms * seconds^2)
+        static constexpr double G = -6.6743e-11; // meters^3 / (kilograms * seconds^2)
         static constexpr double epsilon = 1e-8;
 
         auto& posA = mPosition;
