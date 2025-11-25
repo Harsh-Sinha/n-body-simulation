@@ -3,8 +3,7 @@
 
 # Set up batch job settings
 #SBATCH --job-name=cse587_semester_project
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=36
+#SBATCH --cpus-per-task=36
 #SBATCH --exclusive
 #SBATCH --time=00:15:00
 #SBATCH --account=cse587f25s001_class
