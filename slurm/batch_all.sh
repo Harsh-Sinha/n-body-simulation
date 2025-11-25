@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rm *.txt *.zip slurm*
+
 module load gcc
 
 sbatch benchmark_scaling_p1.sh
