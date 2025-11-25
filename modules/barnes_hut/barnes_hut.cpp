@@ -283,9 +283,10 @@ void BarnesHut::updateState(size_t iteration)
     const double halfDtSquared = halfDt * mDt;
 
     #pragma omp parallel for schedule(static)
-    for (auto& particle : mParticles)
+    for (size_t i = 0; i < mParticles.size(); ++i)
     {
         // perform leapfrog integration
+        auto*& particle = mParticles[i];
 
         // x_{i+1} = x_i + v_i*dt + 0.5*a_i*dt^2
         particle->mPosition[0] += particle->mVelocity[0] * mDt + halfDtSquared * particle->mAcceleration[0];
