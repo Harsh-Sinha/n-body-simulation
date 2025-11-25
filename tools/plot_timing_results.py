@@ -172,7 +172,7 @@ def main():
             plt.plot(x[1:], y[1:], marker="o")
 
             # Add point labels
-            for xi, yi in zip(x, y):
+            for xi, yi in zip(x[1:], y[1:]):
                 plt.text(
                     xi,
                     yi,
