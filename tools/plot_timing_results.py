@@ -27,6 +27,13 @@ def parse_file(path):
     data = {}
     with open(path) as f:
         for line in f:
+            if (line.startswith("    ") or line.startswith("\t")) and ":" not in line:
+                parts = line.strip().split()
+                if len(parts) >= 2:
+                    name = " ".join(parts[:-1])
+                    value = float(parts[-1])
+                    data[name] = value
+                continue
             if line.startswith("    ") or line.startswith("\t"):
                 if ":" in line:
                     subname, subvalue = line.strip().split(":")
