@@ -96,6 +96,11 @@ public:
         return mRoot;
     }
 
+    inline std::array<double, 3>& getProfileData()
+    {
+        return mProfileData;
+    }
+
 private: 
     Octree() = default;
 
@@ -134,4 +139,5 @@ private:
     size_t mMaxPointsPerNode;
     size_t mParallelThresholdForInsert;
     std::vector<Particle*> mRawParticles;
+    std::array<double, 3> mProfileData;
 };

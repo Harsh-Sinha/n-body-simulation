@@ -61,7 +61,7 @@ private:
     // store as float because alembic requires float
     std::vector<float> mMass;
     std::vector<std::vector<std::array<double, 3>>> mPositions;
-    std::array<double, 4> mProfileData;
+    std::array<double, 7> mProfileData;
     uint64_t mNumIterations;
     uint64_t mN;
     double mDt;

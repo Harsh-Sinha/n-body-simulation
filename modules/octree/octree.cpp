@@ -3,6 +3,34 @@
 #include <stdexcept>
 #include <limits> 
 #include <omp.h>
+#include <chrono>
+
+namespace
+{
+class ScopedTimer
+{
+public:
+    ScopedTimer(double& out)
+        : mStart(std::chrono::high_resolution_clock::now())
+        , mOut(out)
+    {}
+
+    ~ScopedTimer()
+    {
+        auto end = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double, std::milli> elapsed_ms = end - mStart;
+
+        mOut = elapsed_ms.count();
+    }
+
+private:
+    ScopedTimer() = default;
+
+    std::chrono::high_resolution_clock::time_point mStart;
+    double& mOut;
+};
+}
 
 Octree::Octree(std::vector<Particle*>& points, bool supportMultithread, 
                size_t parallelThresholdForInsert, size_t maxPointsPerNode) 
@@ -14,29 +42,38 @@ Octree::Octree(std::vector<Particle*>& points, bool supportMultithread,
     {
         throw std::runtime_error("trying to init octree with 0 points");
     }
-
-    mRoot->boundingBox = computeBoundingBox(points);
-
-    if (mSupportMultithread)
+    
     {
-        mRoot->points.insert(mRoot->points.end(), points.begin(), points.end());
-        #pragma omp parallel
+        ScopedTimer timer(mProfileData[0]);
+        mRoot->boundingBox = computeBoundingBox(points);
+    }
+
+    {
+        ScopedTimer timer(mProfileData[1]);
+        if (mSupportMultithread)
         {
-            #pragma omp single
+            mRoot->points.insert(mRoot->points.end(), points.begin(), points.end());
+            #pragma omp parallel
             {
-                insertParallel(mRoot);
+                #pragma omp single
+                {
+                    insertParallel(mRoot);
+                }
+            }
+        }
+        else
+        {
+            for (auto& point : points)
+            {
+                insert(mRoot, point);
             }
         }
     }
-    else
-    {
-        for (auto& point : points)
-        {
-            insert(mRoot, point);
-        }
-    }
 
-    generateLeafNodeList(mRoot);
+    {
+        ScopedTimer timer(mProfileData[2]);
+        generateLeafNodeList(mRoot);
+    }
 }
 
 Octree::~Octree()

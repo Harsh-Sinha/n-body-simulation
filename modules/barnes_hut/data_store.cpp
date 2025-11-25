@@ -110,6 +110,9 @@ void DataStore::writeProfileData(std::string& filename)
 
     file << "all times in milliseconds\n";
     file << "octree creation: " << mProfileData[0] << "\n";
+    file << "    compute bounding box: " << mProfileData[4] << "\n";
+    file << "    insert points "         << mProfileData[5] << "\n";
+    file << "    generate leaf nodes: "  << mProfileData[6] << "\n";
     file << "center of mass calculation: " << mProfileData[1] << "\n";
     file << "applying forces calculation: " << mProfileData[2] << "\n";
     file << "update pos/vel/acc: " << mProfileData[3] << "\n";

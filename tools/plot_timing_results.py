@@ -27,6 +27,12 @@ def parse_file(path):
     data = {}
     with open(path) as f:
         for line in f:
+            if line.startswith("    ") or line.startswith("\t"):
+                if ":" in line:
+                    subname, subvalue = line.strip().split(":")
+                    data[subname.strip()] = float(subvalue.strip())
+                continue
+
             if ":" in line:
                 name, value = line.split(":")
                 data[name.strip()] = float(value.strip())
@@ -34,16 +40,15 @@ def parse_file(path):
 
 def determine_big_o_coeff(field, x, y):
     denom = 0.0
-    if field == "octree creation" or field == "overall" or field == "applying forces calculation":
+    if field == "octree creation" or field == "overall" or field == "applying forces calculation" or field == "insert points":
         # O(nlogn) algorithms
         denom = x * math.log(x, 10)
     elif field == "center of mass calculation":
         # O(8^logn) algorithm
         denom = 8.0 ** (math.log(x, 10))
-    else: # field == "update pos/vel/acc" 
+    else: # field == "update pos/vel/acc" or field == "compute bounding box" or field == "generate leaf nodes"
         # O(n) algorithms
         denom = x
-
     return y / denom
 
 def main():
@@ -72,7 +77,6 @@ def main():
         print("Nn valid profiling files found.")
         return
 
-    # Sort for neat plots
     records.sort(key=lambda r: (r[1], r[0]))
 
     particleValues = sorted(set(r[0] for r in records))
@@ -80,6 +84,9 @@ def main():
 
     timingFields = [
         "octree creation",
+        "compute bounding box",
+        "insert points",
+        "generate leaf nodes",
         "center of mass calculation",
         "applying forces calculation",
         "update pos/vel/acc",
@@ -100,7 +107,7 @@ def main():
         x = [r[0] for r in subset]  # particle counts
 
         for field in timingFields:
-            y = [r[2][field] for r in subset]
+            y = [r[2].get(field, 0.0) for r in subset] 
 
             plt.figure(figsize=(10, 6))
             plt.plot(x, y, marker="o")
@@ -151,7 +158,7 @@ def main():
         x = [r[1] for r in subset]  # thread counts
 
         for field in timingFields:
-            y = [r[2][field] for r in subset]
+            y = [r[2].get(field, 0.0) for r in subset]
 
             plt.figure(figsize=(10, 6))
             # skip plotting the serial timing

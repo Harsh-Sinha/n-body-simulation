@@ -72,6 +72,14 @@ void BarnesHut::simulate()
     {
         PROFILE(0, Octree tree(mParticles, true, 5000, 1));
 
+        if (mProfile)
+        {
+            auto& profileData = tree.getProfileData();
+            mDataStore.addProfileData(4, profileData[0]);
+            mDataStore.addProfileData(5, profileData[1]);
+            mDataStore.addProfileData(6, profileData[2]);
+        }
+
         // calculate center of mass
         PROFILE(1, calculateCenterOfMass(tree.getLeafNodes()));
 
