@@ -249,25 +249,88 @@ void Octree::generateLeafNodeList(Node*& node)
 {
     if (node == nullptr) return;
 
-    if (node->isLeafNode())
+    std::vector<Node*> bfs;
+    generateWorkForTreeTraversal(bfs);
+
+    auto numThreads = omp_get_max_threads();
+    std::vector<std::vector<Node*>> localLeafs(numThreads);
+
+    #pragma omp parallel for schedule(dynamic)
+    for (size_t i = 0; i < bfs.size(); ++i)
     {
-        mLeafNodes.emplace_back(node);
+        auto tid = omp_get_thread_num();
+        dfsLeafNodeSearch(bfs[i], localLeafs[tid]);
     }
-    else
+
+    for (auto& local : localLeafs)
     {
-        // morton order traversal based on my octant ordering
-        static constexpr std::array<size_t, 8> MORTON_ORDER = {6, 7, 5, 4, 2, 3, 1, 0};
-        
-        size_t numChildren = 0;
-        for (const auto octantId : MORTON_ORDER)
+        mLeafNodes.insert(mLeafNodes.end(), local.begin(), local.end());
+    }
+}
+
+void Octree::generateWorkForTreeTraversal(std::vector<Node*>& bfs)
+{
+    const size_t targetBfsSize = 8 * omp_get_max_threads();
+
+    bfs.emplace_back(mRoot);
+
+    while (bfs.size() > 0)
+    {
+        if (bfs.size() >= targetBfsSize) break;
+
+        std::vector<Node*> nextSet;
+        for (auto*& node : bfs)
         {
-            if (node->octants[octantId])
+            size_t numChildren = 0;
+            for (const auto octantId : MORTON_ORDER)
             {
-                ++numChildren;
-                generateLeafNodeList(node->octants[octantId]);
+                if (node->octants[octantId])
+                {
+                    ++numChildren;
+                    nextSet.emplace_back(node->octants[octantId]);
+                }
+            }
+
+            // reserve number of points equal to num children
+            // makes it easier for barnes hut
+            node->points.reserve(numChildren);
+            for (size_t i = 0; i < numChildren; ++i)
+            {
+                node->points.emplace_back(new Particle());
+            }
+
+            if (numChildren == 0)
+            {
+                mLeafNodes.emplace_back(node);
             }
         }
 
+        if (nextSet.size() == 0) break;
+
+        bfs.swap(nextSet);
+    }
+}
+
+void Octree::dfsLeafNodeSearch(Node*& node, std::vector<Node*>& local)
+{
+    if (node == nullptr) return;
+
+    size_t numChildren = 0;
+    for (const auto octantId : MORTON_ORDER)
+    {
+        if (node->octants[octantId])
+        {
+            ++numChildren;
+            dfsLeafNodeSearch(node->octants[octantId], local);
+        }
+    }
+
+    if (numChildren == 0)
+    {
+        local.emplace_back(node);
+    }
+    else
+    {
         // reserve number of points equal to num children
         // makes it easier for barnes hut
         node->points.reserve(numChildren);

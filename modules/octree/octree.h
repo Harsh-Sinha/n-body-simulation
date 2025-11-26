@@ -133,6 +133,13 @@ private:
 
     void generateLeafNodeList(Node*& node);
 
+    void generateWorkForTreeTraversal(std::vector<Node*>& bfs);
+
+    void dfsLeafNodeSearch(Node*& node, std::vector<Node*>& local);
+
+    // morton order traversal based on my octant ordering
+    static constexpr std::array<size_t, 8> MORTON_ORDER = {6, 7, 5, 4, 2, 3, 1, 0};
+
     Node* mRoot = new Node();
     std::vector<Node*> mLeafNodes;
     bool mSupportMultithread;
