@@ -94,11 +94,15 @@ void DataStore::writeToBinaryFile(std::string& filename)
 
 void DataStore::writeProfileData(std::string& filename)
 {
-    double sum = 0.0;
     for (auto& data : mProfileData)
     {
         data /= static_cast<double>(mNumIterations);
-        sum += data;
+    }
+
+    double sum = 0.0;
+    for (size_t i = 0; i < 4; ++i)
+    {
+        sum += mProfileData[i];
     }
 
     std::ofstream file(filename);
