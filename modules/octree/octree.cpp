@@ -115,9 +115,10 @@ Octree::BoundingBox Octree::computeBoundingBox(std::vector<Particle*>& points)
     double maxY = -std::numeric_limits<double>::infinity();
     double maxZ = -std::numeric_limits<double>::infinity();
 
-    for (const auto& point : points)
+    #pragma omp parallel for reduction(min:minX, minY, minZ) reduction(max:maxX, maxY, maxZ)
+    for (size_t i = 0; i < points.size(); ++i)
     {
-        auto& pos = point->mPosition;
+        const auto* pos = points[i]->mPosition.data();
 
         minX = std::min(minX, pos[0]);
         minY = std::min(minY, pos[1]);
