@@ -38,7 +38,7 @@ static void validateLeafNodesList(const Octree& tree, const size_t expectedPoint
     REQUIRE(numPoints == expectedPoints);
 }
 
-static int computeMaxDepth(const std::shared_ptr<Octree::Node>& node)
+static int computeMaxDepth(Octree::Node*& node)
 {
     if (!node)
     {
@@ -47,7 +47,7 @@ static int computeMaxDepth(const std::shared_ptr<Octree::Node>& node)
     
     int maxChild = 0;
     
-    for (const auto& octant : node->octants)
+    for (auto*& octant : node->octants)
     {
         if (octant)
         {
@@ -58,7 +58,7 @@ static int computeMaxDepth(const std::shared_ptr<Octree::Node>& node)
     return 1 + maxChild;
 }
 
-static std::size_t countPointsInTree(const std::shared_ptr<Octree::Node>& node)
+static std::size_t countPointsInTree(Octree::Node*& node)
 {
     if (!node)
     {
@@ -72,7 +72,7 @@ static std::size_t countPointsInTree(const std::shared_ptr<Octree::Node>& node)
         count += node->points.size();
     }
     
-    for (const auto& octant : node->octants)
+    for (auto*& octant : node->octants)
     {
         count += countPointsInTree(octant);
     }
@@ -90,9 +90,9 @@ static void assertChildInsideParent(const Octree::BoundingBox& parent,
     REQUIRE(child.halfOfSideLength == Catch::Approx(0.5 * parent.halfOfSideLength));
 }
 
-static void validateNodeRecursive(const std::shared_ptr<Octree::Node>& node,
+static void validateNodeRecursive(Octree::Node*& node,
                                   std::size_t maxPointsPerNode,
-                                  const std::shared_ptr<Octree::Node>& expectedParent = nullptr)
+                                  Octree::Node* expectedParent = nullptr)
 {
     REQUIRE(node != nullptr);
 
@@ -117,7 +117,7 @@ static void validateNodeRecursive(const std::shared_ptr<Octree::Node>& node,
     }
 
     size_t numChildren = 0;
-    for (const auto& child : node->octants)
+    for (auto*& child : node->octants)
     {
         if (child)
         {
@@ -171,10 +171,8 @@ TEST_CASE("Node reports leaf status correctly")
     auto root = tree.mRoot;
     REQUIRE(root->isLeafNode());
 
-    root->octants[0] = std::make_shared<Octree::Node>();
+    root->octants[0] = new Octree::Node();
     REQUIRE_FALSE(root->isLeafNode());
-
-    delete pts[0];
 }
 
 TEST_CASE("BoundingBox::isPointInBox respects padding")
@@ -188,10 +186,6 @@ TEST_CASE("BoundingBox::isPointInBox respects padding")
 
     auto onEdge = makePoint(1, 1, 1);
     REQUIRE(box.isPointInBox(onEdge));
-
-    delete pts[0];
-    delete pts[1];
-    delete onEdge;
 }
 
 TEST_CASE("toOctantId assigns all 8 octants correctly")
@@ -236,9 +230,6 @@ TEST_CASE("toOctantId assigns all 8 octants correctly")
     temp = makePoint(1,  -1,  -1);
     REQUIRE(tree.toOctantId(temp, box) == 7);
     delete temp;
-
-    delete pts[0];
-    delete pts[1];
 }
 
 TEST_CASE("getCorrespondingOctant lazily creates child and sets parent")
@@ -256,10 +247,6 @@ TEST_CASE("getCorrespondingOctant lazily creates child and sets parent")
     // calling again for same point should give same node, not a new one
     auto& childRef2 = tree.getCorrespondingOctant(p, root);
     REQUIRE(childRef2 == childRef);
-
-    delete pts[0];
-    delete pts[1];
-    delete p;
 }
 
 TEST_CASE("Insert splits node when maxPointsPerNode is small")
@@ -293,11 +280,6 @@ TEST_CASE("Insert splits node when maxPointsPerNode is small")
         }
     }
     REQUIRE(nonNullCount == 8);
-
-    for (auto* p : pts)
-    {
-        delete p;
-    }
 }
 
 TEST_CASE("Octree should handle empty point sets")
@@ -352,11 +334,6 @@ TEST_CASE("Large octree (≈500 pts) forms a valid spatial subdivision")
     {
         REQUIRE(root->boundingBox.isPointInBox(p));
     }
-
-    for (auto* p : pts)
-    {
-        delete p;
-    }
 }
 
 TEST_CASE("Octree handles highly clustered points plus distant outliers")
@@ -408,11 +385,6 @@ TEST_CASE("Octree handles highly clustered points plus distant outliers")
     int depth = computeMaxDepth(root);
     REQUIRE(depth >= 3);
     REQUIRE(depth < 25);
-
-    for (auto* p : pts)
-    {
-        delete p;
-    }
 }
 
 TEST_CASE("Parallel Octree generation with large input size")
@@ -440,10 +412,5 @@ TEST_CASE("Parallel Octree generation with large input size")
     for (auto* p : pts)
     {
         REQUIRE(root->boundingBox.isPointInBox(p));
-    }
-
-    for (auto* p : pts)
-    {
-        delete p;
     }
 }
