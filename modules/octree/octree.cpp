@@ -4,6 +4,7 @@
 #include <limits> 
 #include <omp.h>
 #include <chrono>
+#include <cstring>
 
 namespace
 {
@@ -229,6 +230,76 @@ void Octree::insertParallel(Node*& node)
 
         #pragma omp taskwait
     }
+}
+
+void Octree::partitionPointsInNode(Node*& node)
+{
+    if (node == nullptr) return;
+
+    const size_t numPoints = node->points.size();
+
+    if (numPoints == 0) return;
+
+    size_t elementsPerOctant[8] = { 0 };
+
+    #pragma omp parallel for reduction(+: elementsPerOctant)
+    for (size_t i = 0; i < numPoints; ++i)
+    {
+        size_t octantId = toOctantId(node->points[i], node->boundingBox);
+        ++elementsPerOctant[octantId];
+    }
+
+    size_t offset[8];
+    offset[0] = 0;
+    for (size_t i = 1; i < 8; ++i)
+    {
+        offset[i] = offset[i - 1] + elementsPerOctant[i - 1];
+    }
+
+    std::vector<Particle*> temp(numPoints);
+
+    #pragma omp parallel
+    {
+        size_t writePosition[8];
+        std::memcpy(writePosition, offset, 8 * sizeof(size_t));
+
+        #pragma omp for nowait
+        for (size_t i = 0; i < numPoints; ++i)
+        {
+            auto*& point = node->points[i];
+            size_t octantId = toOctantId(point, node->boundingBox);
+            size_t index = writePosition[octantId]++;
+            temp[index] = point;
+        }
+    }
+
+    #pragma omp parallel for
+    for (size_t i = 0; i < 8; ++i)
+    {
+        if (elementsPerOctant[i] > 0)
+        {
+            Node* octant = new Node();
+            node->octants[i] = octant;
+
+            octant->boundingBox = createChildBox(i, node->boundingBox);
+            octant->parentNode = node;
+
+            size_t start = offset[i];
+            size_t count = elementsPerOctant[i];
+            
+            octant->points.reserve(count);
+            for (size_t j = 0; j < count; ++j)
+            {
+                octant->points.emplace_back(temp[start + j]);
+            }
+        }
+        else
+        {
+            node->octants[i] = nullptr;
+        }
+    }
+
+    node->points.clear();
 }
 
 Octree::BoundingBox Octree::createChildBox(size_t index, const BoundingBox& parent)

@@ -112,6 +112,8 @@ private:
 
     void insertParallel(Node*& node);
 
+    void partitionPointsInNode(Node*& node);
+
     BoundingBox createChildBox(size_t index, const BoundingBox& parent);
 
     // assumes that a reader/writer lock is already held
