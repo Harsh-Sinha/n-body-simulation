@@ -57,9 +57,9 @@ Octree::Octree(std::vector<Particle*>& points, bool supportMultithread,
             mRoot->points.insert(mRoot->points.end(), points.begin(), points.end());
             #pragma omp parallel
             {
-                #pragma omp single
+                #pragma omp single nowait
                 {
-                    insertParallel(mRoot);
+                    hybridParallelInsert(mRoot);
                 }
             }
         }
@@ -323,6 +323,51 @@ void Octree::partitionPointsInNode(Node*& node)
     }
 
     node->points.clear();
+}
+
+void Octree::hybridParallelInsert(Node*& node)
+{
+    static constexpr size_t THRESHOLD_FOR_TASK_BASED = 50000;
+    if (node == nullptr) return;
+
+    const size_t numPoints = node->points.size();
+
+    if (numPoints == 0) return;
+    if (numPoints <= mMaxPointsPerNode) return;
+
+    if (numPoints <= mParallelThresholdForInsert)
+    {
+        std::vector<Particle*> temp;
+        temp.swap(node->points);
+
+        for (auto& point : temp)
+        {
+            insert(node, point);
+        }
+        return;
+    }
+    else if (numPoints <= THRESHOLD_FOR_TASK_BASED)
+    {
+        insertParallel(node);
+    }
+    else
+    {
+        partitionPointsInNode(node);
+
+        for (size_t i = 0; i < 8; ++i)
+        {
+            auto*& octant = node->octants[i];
+            if (octant)
+            {
+                #pragma omp task default(none) firstprivate(octant)
+                {
+                    hybridParallelInsert(octant);
+                }
+            }
+        }
+
+        #pragma omp taskwait
+    }
 }
 
 Octree::BoundingBox Octree::createChildBox(size_t index, const BoundingBox& parent)
