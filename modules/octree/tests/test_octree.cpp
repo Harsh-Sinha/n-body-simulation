@@ -387,6 +387,85 @@ TEST_CASE("Octree handles highly clustered points plus distant outliers")
     REQUIRE(depth < 25);
 }
 
+TEST_CASE("partitionPointsInNode correctly partitions points into 8 octants")
+{
+    Octree::Node* root = new Octree::Node();
+
+    root->boundingBox.center = {0.0, 0.0, 0.0};
+    root->boundingBox.halfOfSideLength = 1.0;
+
+    root->points = {
+        makePoint(-0.5, -0.5, -0.5),
+        makePoint(+0.5, -0.5, -0.5),
+        makePoint(-0.5, +0.5, -0.5),
+        makePoint(+0.5, +0.5, -0.5),
+        makePoint(-0.5, -0.5, +0.5),
+        makePoint(+0.5, -0.5, +0.5),
+        makePoint(-0.5, +0.5, +0.5),
+        makePoint(+0.5, +0.5, +0.5) 
+    };
+
+    Octree tree;
+    tree.mParallelThresholdForInsert = 1;
+    tree.mMaxPointsPerNode = 1;
+
+    tree.partitionPointsInNode(root);
+
+    for (size_t i = 0; i < 8; ++i)
+    {
+        REQUIRE(root->octants[i] != nullptr);
+        REQUIRE(root->octants[i]->parentNode == root);
+        REQUIRE(root->octants[i]->points.size() == 1);
+        REQUIRE(root->octants[i]->boundingBox.halfOfSideLength == Catch::Approx(0.5));
+        REQUIRE(root->octants[i]->boundingBox.isPointInBox(root->octants[i]->points[0]));
+    }
+
+    REQUIRE(root->points.empty());
+
+    REQUIRE(countPointsInTree(root) == 8);
+}
+
+TEST_CASE("partitionPointsInNode builds a structurally valid first-level octree split")
+{
+    constexpr size_t numPoints = 200;
+    constexpr size_t maxPointsPerNode = 1;
+
+    Octree tree;
+    tree.mParallelThresholdForInsert = 1;
+    tree.mMaxPointsPerNode = maxPointsPerNode;
+
+    Octree::Node* root = new Octree::Node();
+
+    root->boundingBox.center = {0.0, 0.0, 0.0};
+    root->boundingBox.halfOfSideLength = 1.0;
+
+    std::mt19937_64 rng(12345);
+    std::uniform_real_distribution<double> dist(-1.0, 1.0);
+
+    for (size_t i = 0; i < numPoints; ++i)
+    {
+        root->points.push_back(makePoint(dist(rng), dist(rng), dist(rng)));
+    }
+
+    tree.partitionPointsInNode(root);
+
+    REQUIRE(countPointsInTree(root) == numPoints);
+
+    REQUIRE(root->points.size() == 0);
+    for (auto*& octant : root->octants)
+    {
+        if (octant)
+        {
+            for (auto*& point : octant->points)
+            {
+                REQUIRE(octant->boundingBox.isPointInBox(point));
+            }
+        }
+    }
+
+    REQUIRE(computeMaxDepth(root) == 2);
+}
+
 TEST_CASE("Parallel Octree generation with large input size")
 {
     std::filesystem::path file = base() / "inputs" / "test_particle_config_parallel_tree.txt";
@@ -398,7 +477,7 @@ TEST_CASE("Parallel Octree generation with large input size")
         pts.emplace_back(new Particle(particle.position[0], particle.position[1], particle.position[2], 0.0));
     }
 
-    Octree tree(pts, true);
+    Octree tree(pts, true, 5000, 1);
     auto root = tree.mRoot;
     REQUIRE(root != nullptr);
 
