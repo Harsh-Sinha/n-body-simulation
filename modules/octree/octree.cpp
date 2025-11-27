@@ -5,6 +5,7 @@
 #include <omp.h>
 #include <chrono>
 #include <cstring>
+#include <atomic>
 
 namespace
 {
@@ -239,15 +240,39 @@ void Octree::partitionPointsInNode(Node*& node)
     const size_t numPoints = node->points.size();
 
     if (numPoints == 0) return;
+    if (numPoints <= mMaxPointsPerNode) return;
 
-    size_t elementsPerOctant[8] = { 0 };
+    if (numPoints <= mParallelThresholdForInsert)
+    {
+        std::vector<Particle*> temp;
+        temp.swap(node->points);
 
-    #pragma omp parallel for reduction(+: elementsPerOctant)
+        for (auto& point : temp)
+        {
+            insert(node, point);
+        }
+        return;
+    }
+
+    // count how many points go in each octant
+    size_t a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0;
+    #pragma omp parallel for reduction(+: a, b, c, d, e, f, g, h)
     for (size_t i = 0; i < numPoints; ++i)
     {
         size_t octantId = toOctantId(node->points[i], node->boundingBox);
-        ++elementsPerOctant[octantId];
+        switch (octantId)
+        {
+            case 0: ++a; break;
+            case 1: ++b; break;
+            case 2: ++c; break;
+            case 3: ++d; break;
+            case 4: ++e; break;
+            case 5: ++f; break;
+            case 6: ++g; break;
+            case 7: ++h; break;
+        }
     }
+    size_t elementsPerOctant[8] = { a, b, c, d, e, f, g, h };
 
     size_t offset[8];
     offset[0] = 0;
@@ -258,19 +283,17 @@ void Octree::partitionPointsInNode(Node*& node)
 
     std::vector<Particle*> temp(numPoints);
 
-    #pragma omp parallel
-    {
-        size_t writePosition[8];
-        std::memcpy(writePosition, offset, 8 * sizeof(size_t));
+    std::atomic<size_t> writePosition[8] = { offset[0], offset[1], offset[2], offset[3],
+                                             offset[4], offset[5], offset[6], offset[7] };
 
-        #pragma omp for nowait
-        for (size_t i = 0; i < numPoints; ++i)
-        {
-            auto*& point = node->points[i];
-            size_t octantId = toOctantId(point, node->boundingBox);
-            size_t index = writePosition[octantId]++;
-            temp[index] = point;
-        }
+    #pragma omp parallel for
+    for (size_t i = 0; i < numPoints; ++i)
+    {
+        auto*& point = node->points[i];
+        size_t octantId = toOctantId(point, node->boundingBox);
+        size_t index = writePosition[octantId].fetch_add(1);
+
+        temp[index] = point;
     }
 
     #pragma omp parallel for
