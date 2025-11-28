@@ -103,7 +103,7 @@ public:
 
     void insert(Node*& node, Particle*& point);
 
-    void insertParallel(Node*& node);
+    void insertParallel(Node*& node, bool benchmarkSingleIteration = false);
 
     void partitionPointsInNode(Node*& node);
 

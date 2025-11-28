@@ -168,7 +168,7 @@ void Octree::insert(Node*& node, Particle*& point)
     }
 }
 
-void Octree::insertParallel(Node*& node)
+void Octree::insertParallel(Node*& node, bool benchmarkSingleIteration)
 {
     if (node == nullptr) return;
     if (node->points.size() <= mMaxPointsPerNode) return;
@@ -216,6 +216,8 @@ void Octree::insertParallel(Node*& node)
         }
 
         node->points.clear();
+
+        if (benchmarkSingleIteration) return;
 
         for (size_t octantId = 0; octantId < 8; ++octantId)
         {

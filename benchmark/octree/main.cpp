@@ -141,9 +141,10 @@ int main()
                 {
                     Octree::Node* node = createNode(particles);
 
+                    std::vector<Particle*> temp;
+                    temp.swap(node->points);
+
                     double t = benchmark([&]() {
-                        std::vector<Particle*> temp;
-                        temp.swap(node->points);
                         for (auto* p : temp)
                         {
                             tree.insert(node, p);
@@ -162,7 +163,7 @@ int main()
                         {
                             #pragma omp single
                             {
-                                tree.insertParallel(node);
+                                tree.insertParallel(node, true);
                             }
                         }
                     });
