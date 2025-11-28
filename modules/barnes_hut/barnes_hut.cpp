@@ -13,13 +13,13 @@ class ScopedTimer
 {
 public:
     ScopedTimer(double& out)
-        : mStart(std::chrono::high_resolution_clock::now())
+        : mStart(std::chrono::steady_clock::now())
         , mOut(out)
     {}
 
     void recordElapsedMs()
     {
-        auto end = std::chrono::high_resolution_clock::now();
+        auto end = std::chrono::steady_clock::now();
 
         std::chrono::duration<double, std::milli> elapsed_ms = end - mStart;
 
@@ -31,7 +31,7 @@ public:
 private:
     ScopedTimer() = default;
 
-    std::chrono::high_resolution_clock::time_point mStart;
+    std::chrono::steady_clock::time_point mStart;
     double& mOut;
 };
 
