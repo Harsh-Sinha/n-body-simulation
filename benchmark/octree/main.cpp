@@ -105,6 +105,10 @@ int main()
         Octree& tree = dummyTree;
 
         const std::vector<std::size_t> testSizes = {
+            10,
+            100,
+            200,
+            500,
             1000,
             2000,
             5000,
