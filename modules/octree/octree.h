@@ -101,18 +101,18 @@ public:
         return mProfileData;
     }
 
+    void insert(Node*& node, Particle*& point);
+
+    void insertParallel(Node*& node);
+
+    void partitionPointsInNode(Node*& node);
+
 private: 
     Octree() = default;
 
     void freeNode(Node*& node);
 
     BoundingBox computeBoundingBox(std::vector<Particle*>& points);
-
-    void insert(Node*& node, Particle*& point);
-
-    void insertParallel(Node*& node);
-
-    void partitionPointsInNode(Node*& node);
 
     void hybridParallelInsert(Node*& node);
 
