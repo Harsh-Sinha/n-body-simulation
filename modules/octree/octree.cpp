@@ -57,9 +57,9 @@ Octree::Octree(std::vector<Particle*>& points, bool supportMultithread,
             mRoot->points.insert(mRoot->points.end(), points.begin(), points.end());
             #pragma omp parallel
             {
-                #pragma omp single nowait
+                #pragma omp single
                 {
-                    hybridParallelInsert(mRoot);
+                    insertParallel(mRoot);
                 }
             }
         }
@@ -185,34 +185,11 @@ void Octree::insertParallel(Node*& node, bool benchmarkSingleIteration)
     }
     else
     {
-        std::array<size_t, 8> elementsPerOctant;
-        elementsPerOctant.fill(0);
-        for (size_t i = 0; i < node->points.size(); ++i)
+        for (auto*& particle : node->points)
         {
-            size_t octantId = toOctantId(node->points[i], node->boundingBox);
-            ++elementsPerOctant[octantId];
-        }
+            auto*& octant = getCorrespondingOctant(particle, node);
 
-        for (size_t octantId = 0; octantId < 8; ++octantId)
-        {
-            if (elementsPerOctant[octantId] > 0)
-            {
-                node->octants[octantId] = new Node();
-                node->octants[octantId]->boundingBox = createChildBox(octantId, node->boundingBox);
-                node->octants[octantId]->parentNode = node;
-
-                node->octants[octantId]->points.resize(elementsPerOctant[octantId]);
-            }
-        }
-
-        std::array<size_t, 8> index;
-        index.fill(0);
-        for (size_t i = 0; i < node->points.size(); ++i)
-        {
-            size_t octantId = toOctantId(node->points[i], node->boundingBox);
-            Node*& child = node->octants[octantId];
-            child->points[index[octantId]] = node->points[i];
-            ++index[octantId];
+            octant->points.emplace_back(particle);
         }
 
         node->points.clear();
