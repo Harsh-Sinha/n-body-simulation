@@ -6,9 +6,9 @@
 
 #include "particle.h"
 
-static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 5;
+static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 1;
 // when node contains <= number of points switch to serial insert algorithm
-static constexpr size_t PARALLEL_THRESHOLD_FOR_INSERT = 5000;
+static constexpr size_t PARALLEL_THRESHOLD_FOR_INSERT = 10;
 
 // valgrind will report possiblly lost memory for all these function calls
 // because they are raw pointers... but look at assumption above constructor
