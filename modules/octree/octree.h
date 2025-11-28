@@ -107,12 +107,12 @@ public:
 
     void partitionPointsInNode(Node*& node);
 
+    static BoundingBox computeBoundingBox(std::vector<Particle*>& points);
+
 private: 
     Octree() = default;
 
     void freeNode(Node*& node);
-
-    BoundingBox computeBoundingBox(std::vector<Particle*>& points);
 
     void hybridParallelInsert(Node*& node);
 
