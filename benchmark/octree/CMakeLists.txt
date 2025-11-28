@@ -4,6 +4,6 @@ set(EXEC_NAME benchmark_octree)
 
 add_executable(${EXEC_NAME} main.cpp)
 
-target_link_libraries(${EXEC_NAME} PUBLIC ParticleConfig Octree)
+target_link_libraries(${EXEC_NAME} PUBLIC OpenMP::OpenMP_CXX ParticleConfig Octree)
 
 install(TARGETS ${EXEC_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
