@@ -120,6 +120,8 @@ void DataStore::writeProfileData(std::string& filename)
     file << "center of mass calculation: " << mProfileData[1] << "\n";
     file << "applying forces calculation: " << mProfileData[2] << "\n";
     file << "update pos/vel/acc: " << mProfileData[3] << "\n";
+    file << "    leapfrog integration: " << mProfileData[7] << "\n";
+    file << "    update data store: "    << mProfileData[8] << "\n";
     file << "overall: " << sum << "\n";
 
     file.close();

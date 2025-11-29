@@ -290,37 +290,54 @@ void BarnesHut::updateState(size_t iteration)
     const double halfDt = 0.5 * mDt;
     const double halfDtSquared = halfDt * mDt;
 
-    #pragma omp parallel for schedule(static)
-    for (size_t i = 0; i < mParticles.size(); ++i)
     {
-        // perform leapfrog integration
-        auto*& particle = mParticles[i];
+        double elapsed = 0.0;
+        ScopedTimer timer(elapsed);
+        #pragma omp parallel for schedule(static)
+        for (size_t i = 0; i < mParticles.size(); ++i)
+        {
+            // perform leapfrog integration
+            auto*& particle = mParticles[i];
 
-        // x_{i+1} = x_i + v_i*dt + 0.5*a_i*dt^2
-        particle->mPosition[0] += particle->mVelocity[0] * mDt + halfDtSquared * particle->mAcceleration[0];
-        particle->mPosition[1] += particle->mVelocity[1] * mDt + halfDtSquared * particle->mAcceleration[1];
-        particle->mPosition[2] += particle->mVelocity[2] * mDt + halfDtSquared * particle->mAcceleration[2];
+            // x_{i+1} = x_i + v_i*dt + 0.5*a_i*dt^2
+            particle->mPosition[0] += particle->mVelocity[0] * mDt + halfDtSquared * particle->mAcceleration[0];
+            particle->mPosition[1] += particle->mVelocity[1] * mDt + halfDtSquared * particle->mAcceleration[1];
+            particle->mPosition[2] += particle->mVelocity[2] * mDt + halfDtSquared * particle->mAcceleration[2];
 
-        // a_{i+1} = F / m
-        double inverseMass = 1.0 / particle->mMass;
-        double axUpdated = particle->mAppliedForce[0] * inverseMass;
-        double ayUpdated = particle->mAppliedForce[1] * inverseMass;
-        double azUpdated = particle->mAppliedForce[2] * inverseMass;
+            // a_{i+1} = F / m
+            double inverseMass = 1.0 / particle->mMass;
+            double axUpdated = particle->mAppliedForce[0] * inverseMass;
+            double ayUpdated = particle->mAppliedForce[1] * inverseMass;
+            double azUpdated = particle->mAppliedForce[2] * inverseMass;
 
-        // v_{i+1} = v_i + 0.5*(a_i + a_{i+1})*dt
-        particle->mVelocity[0] += halfDt * (particle->mAcceleration[0] + axUpdated);
-        particle->mVelocity[1] += halfDt * (particle->mAcceleration[1] + ayUpdated);
-        particle->mVelocity[2] += halfDt * (particle->mAcceleration[2] + azUpdated);
+            // v_{i+1} = v_i + 0.5*(a_i + a_{i+1})*dt
+            particle->mVelocity[0] += halfDt * (particle->mAcceleration[0] + axUpdated);
+            particle->mVelocity[1] += halfDt * (particle->mAcceleration[1] + ayUpdated);
+            particle->mVelocity[2] += halfDt * (particle->mAcceleration[2] + azUpdated);
 
-        particle->mAcceleration[0] = axUpdated;
-        particle->mAcceleration[1] = ayUpdated;
-        particle->mAcceleration[2] = azUpdated;
+            particle->mAcceleration[0] = axUpdated;
+            particle->mAcceleration[1] = ayUpdated;
+            particle->mAcceleration[2] = azUpdated;
 
-        // clear out particle force
-        particle->mAppliedForce[0] = 0.0;
-        particle->mAppliedForce[1] = 0.0;
-        particle->mAppliedForce[2] = 0.0;
+            // clear out particle force
+            particle->mAppliedForce[0] = 0.0;
+            particle->mAppliedForce[1] = 0.0;
+            particle->mAppliedForce[2] = 0.0;
+        }
+        timer.recordElapsedMs();
+        mDataStore.addProfileData(7, elapsed);
+    }
 
-        iterationStore[particle->mId] = particle->mPosition;
+    {
+        double elapsed = 0.0;
+        ScopedTimer timer(elapsed);
+        #pragma omp parallel for schedule(static)
+        for (size_t i = 0; i < mParticles.size(); ++i)
+        {
+            auto*& particle = mParticles[i];
+            iterationStore[particle->mId] = particle->mPosition;
+        }
+        timer.recordElapsedMs();
+        mDataStore.addProfileData(8, elapsed);
     }
 }

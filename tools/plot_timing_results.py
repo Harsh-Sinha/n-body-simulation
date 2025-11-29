@@ -97,6 +97,8 @@ def main():
         "center of mass calculation",
         "applying forces calculation",
         "update pos/vel/acc",
+        "leapfrog integration",
+        "update data store",
         "overall"
     ]
 
