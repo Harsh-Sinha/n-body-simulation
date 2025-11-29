@@ -10,7 +10,7 @@ find_package(OpenMP REQUIRED)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "building for ${CMAKE_BUILD_TYPE}")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -fomit-frame-pointer -march=native -funroll-loops -ffast-math -fopenmp-simd -fno-math-errno")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -march=native -mtune=native -ffast-math -fno-trapping-math -fno-signaling-nans -fno-math-errno -fopenmp -fopenmp-simd -falign-functions=32 -falign-loops=32 -falign-jumps=32 -freorder-blocks-and-partition -fno-semantic-interposition")
 endif()
 
 if (${ENABLE_TESTING})
