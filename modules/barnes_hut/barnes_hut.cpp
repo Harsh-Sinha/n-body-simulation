@@ -70,7 +70,7 @@ void BarnesHut::simulate()
 {
     for (size_t i = 0; i < mNumIterations; ++i)
     {
-        PROFILE(0, Octree tree(mParticles, true));
+        PROFILE(0, Octree tree(mParticles, true, 1000, 1));
 
         if (mProfile)
         {
