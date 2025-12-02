@@ -1,0 +1,17 @@
+benchmarking with 36
+Num particles    serial(ms)   insertPar(ms)   partition(ms)      best
+----------------------------------------------------------------
+      10         0.005           0.039           0.092    serial
+     100         0.034           0.027           0.086 insertPar
+     200         0.070           0.025           0.088 insertPar
+     500         0.175           0.042           0.106 insertPar
+    1000         0.354           0.038           0.143 insertPar
+    2000         0.723           0.064           0.216 insertPar
+    5000         1.912           0.121           0.434 insertPar
+   10000         3.984           0.235           0.805 insertPar
+   20000         8.286           0.475           1.607 insertPar
+   50000        23.938           1.245           3.753 insertPar
+  100000        53.450           3.128           7.379 insertPar
+  200000       118.265           6.549          14.997 insertPar
+  500000       341.761          18.612          37.872 insertPar
+ 1000000       753.125          33.590          75.412 insertPar
