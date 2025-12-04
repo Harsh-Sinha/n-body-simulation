@@ -1,0 +1,63 @@
+Section: update_data_store
+cache-references:            241269
+cache-misses:                156056
+cycles:                      3723900
+instructions:                876732
+branch-misses:               27
+cache-miss %:                0.646813
+cache-misses / instructions: 0.177997
+IPC:                         0.235434
+Section: leapfrog_integration
+cache-references:            213437
+cache-misses:                142348
+cycles:                      3732068
+instructions:                4101713
+branch-misses:               32
+cache-miss %:                0.666932
+cache-misses / instructions: 0.0347045
+IPC:                         1.09905
+Section: applying_forces
+cache-references:            9294206
+cache-misses:                2285724
+cycles:                      3828838585
+instructions:                4810351702
+branch-misses:               44482840
+cache-miss %:                0.24593
+cache-misses / instructions: 0.000475168
+IPC:                         1.25635
+Section: calculate_center_of_mass
+cache-references:            1967585
+cache-misses:                1650080
+cycles:                      78387083
+instructions:                17903989
+branch-misses:               417659
+cache-miss %:                0.838632
+cache-misses / instructions: 0.0921627
+IPC:                         0.228405
+Section: generate_leaf_nodes
+cache-references:            859078
+cache-misses:                762975
+cycles:                      50792875
+instructions:                64572477
+branch-misses:               242954
+cache-miss %:                0.888132
+cache-misses / instructions: 0.0118158
+IPC:                         1.27129
+Section: insert_particles
+cache-references:            1146412
+cache-misses:                891301
+cycles:                      107609262
+instructions:                124550229
+branch-misses:               944044
+cache-miss %:                0.77747
+cache-misses / instructions: 0.00715616
+IPC:                         1.15743
+Section: compute_bounding_box
+cache-references:            182823
+cache-misses:                180788
+cycles:                      3231179
+instructions:                1082988
+branch-misses:               149
+cache-miss %:                0.988869
+cache-misses / instructions: 0.166934
+IPC:                         0.335168

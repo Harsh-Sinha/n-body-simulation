@@ -1,0 +1,63 @@
+Section: update_data_store
+cache-references:            70527
+cache-misses:                59276
+cycles:                      13575537
+instructions:                741779
+branch-misses:               33
+cache-miss %:                0.840472
+cache-misses / instructions: 0.0799106
+IPC:                         0.0546409
+Section: leapfrog_integration
+cache-references:            71643
+cache-misses:                70318
+cycles:                      6710034
+instructions:                1187320
+branch-misses:               23
+cache-miss %:                0.981506
+cache-misses / instructions: 0.0592241
+IPC:                         0.176947
+Section: applying_forces
+cache-references:            15745020
+cache-misses:                8073948
+cycles:                      1904079203
+instructions:                1671848553
+branch-misses:               19356049
+cache-miss %:                0.512794
+cache-misses / instructions: 0.00482935
+IPC:                         0.878035
+Section: calculate_center_of_mass
+cache-references:            697069
+cache-misses:                576296
+cycles:                      46485553
+instructions:                5338053
+branch-misses:               117267
+cache-miss %:                0.826742
+cache-misses / instructions: 0.10796
+IPC:                         0.114833
+Section: generate_leaf_nodes
+cache-references:            605590
+cache-misses:                428450
+cycles:                      69150323
+instructions:                22039643
+branch-misses:               77453
+cache-miss %:                0.707492
+cache-misses / instructions: 0.01944
+IPC:                         0.318721
+Section: insert_particles
+cache-references:            438874
+cache-misses:                346422
+cycles:                      112240417
+instructions:                54947696
+branch-misses:               341531
+cache-miss %:                0.789343
+cache-misses / instructions: 0.00630458
+IPC:                         0.489554
+Section: compute_bounding_box
+cache-references:            56645
+cache-misses:                56213
+cycles:                      2625450
+instructions:                302511
+branch-misses:               28
+cache-miss %:                0.992374
+cache-misses / instructions: 0.185821
+IPC:                         0.115223

@@ -1,0 +1,63 @@
+Section: update_data_store
+cache-references:            566
+cache-misses:                262
+cycles:                      47963
+instructions:                7663
+branch-misses:               24
+cache-miss %:                0.462898
+cache-misses / instructions: 0.0341903
+IPC:                         0.159769
+Section: leapfrog_integration
+cache-references:            1800
+cache-misses:                1066
+cycles:                      221185
+instructions:                26959
+branch-misses:               19
+cache-miss %:                0.592222
+cache-misses / instructions: 0.0395415
+IPC:                         0.121884
+Section: applying_forces
+cache-references:            470259
+cache-misses:                187841
+cycles:                      25504613
+instructions:                17974433
+branch-misses:               316940
+cache-miss %:                0.399442
+cache-misses / instructions: 0.0104505
+IPC:                         0.704752
+Section: calculate_center_of_mass
+cache-references:            10445
+cache-misses:                4862
+cycles:                      951908
+instructions:                146857
+branch-misses:               3016
+cache-miss %:                0.465486
+cache-misses / instructions: 0.033107
+IPC:                         0.154276
+Section: generate_leaf_nodes
+cache-references:            16519
+cache-misses:                8983
+cycles:                      1634461
+instructions:                716817
+branch-misses:               2967
+cache-miss %:                0.543798
+cache-misses / instructions: 0.0125318
+IPC:                         0.438565
+Section: insert_particles
+cache-references:            6704
+cache-misses:                1672
+cycles:                      2638948
+instructions:                881996
+branch-misses:               6200
+cache-miss %:                0.249403
+cache-misses / instructions: 0.0018957
+IPC:                         0.334223
+Section: compute_bounding_box
+cache-references:            1362
+cache-misses:                150
+cycles:                      69647
+instructions:                8773
+branch-misses:               28
+cache-miss %:                0.110132
+cache-misses / instructions: 0.0170979
+IPC:                         0.125964
