@@ -102,7 +102,7 @@ public:
         mProfilerName = profilerName;
     }
 
-    std::unique_ptr<PerfSection> createSectionProfiler(std::string& name);
+    std::unique_ptr<PerfSection> createSectionProfiler(std::string name);
 
     inline void addProfileData(std::string& profileData)
     {

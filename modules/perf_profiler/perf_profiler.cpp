@@ -124,7 +124,7 @@ PerfProfiler& PerfProfiler::getInstance()
     return profiler;
 }
 
-std::unique_ptr<PerfSection> PerfProfiler::createSectionProfiler(std::string& name)
+std::unique_ptr<PerfSection> PerfProfiler::createSectionProfiler(std::string name)
 {
     return std::move(std::make_unique<PerfSection>(name, *this));
 }
