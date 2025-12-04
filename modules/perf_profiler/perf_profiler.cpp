@@ -65,13 +65,14 @@ PerfSection::~PerfSection()
     std::stringstream ss;
 
     ss << "Section: " << mName << "\n";
-    ss << "cache-references: " << mData[0] << "\n";
-    ss << "cache-misses:     " << mData[1] << "\n";
-    ss << "cycles:           " << mData[2] << "\n";
-    ss << "instructions:     " << mData[3] << "\n";
-    ss << "branch-misses:    " << mData[4] << "\n";
-    ss << "cache-miss %:     " << static_cast<double>(mData[1]) / static_cast<double>(mData[0]) << "\n";
-    ss << "IPC:              " << static_cast<double>(mData[3]) / static_cast<double>(mData[2]) << "\n";
+    ss << "cache-references:            " << mData[0] << "\n";
+    ss << "cache-misses:                " << mData[1] << "\n";
+    ss << "cycles:                      " << mData[2] << "\n";
+    ss << "instructions:                " << mData[3] << "\n";
+    ss << "branch-misses:               " << mData[4] << "\n";
+    ss << "cache-miss %:                " << static_cast<double>(mData[1]) / static_cast<double>(mData[0]) << "\n";
+    ss << "cache-misses / instructions: " << static_cast<double>(mData[1]) / static_cast<double>(mData[3]) << "\n";
+    ss << "IPC:                         " << static_cast<double>(mData[3]) / static_cast<double>(mData[2]) << "\n";
  
     auto str = ss.str();
     mProfilerInstance.addProfileData(str);
