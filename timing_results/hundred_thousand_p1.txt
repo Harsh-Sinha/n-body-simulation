@@ -1,6 +1,11 @@
 all times in milliseconds
-octree creation: 47.0812
-center of mass calculation: 22.1357
-applying forces calculation: 1147.02
-update pos/vel/acc: 1.22188
-overall: 1217.46
+octree creation: 46.662
+    compute bounding box: 0.875617
+    insert points 30.5914
+    generate leaf nodes: 15.194
+center of mass calculation: 21.5284
+applying forces calculation: 1065.37
+update pos/vel/acc: 2.0301
+    leapfrog integration: 1.01419
+    update data store: 1.01571
+overall: 1135.59
