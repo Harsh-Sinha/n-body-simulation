@@ -6,6 +6,10 @@
 
 #include "particle.h"
 
+#ifdef PERF_PROFILE
+#include "perf_profiler.h"
+#endif
+
 static constexpr size_t DEFAULT_MAX_POINTS_PER_NODE = 1;
 // when node contains <= number of points switch to serial insert algorithm
 static constexpr size_t PARALLEL_THRESHOLD_FOR_INSERT = 10;
@@ -16,10 +20,20 @@ class Octree
 {
 public:
     // assume that pointers are valid for as long as tree is used
+#ifdef PERF_PROFILE
+    Octree(std::vector<Particle*>& points,
+           std::unique_ptr<PerfSection>& bbox,
+           std::unique_ptr<PerfSection>& insrt,
+           std::unique_ptr<PerfSection>& leaf,
+           bool supportMultithread = false,
+           size_t parallelThresholdForInsert = PARALLEL_THRESHOLD_FOR_INSERT,
+           size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);    
+#else
     Octree(std::vector<Particle*>& points,
            bool supportMultithread = false,
            size_t parallelThresholdForInsert = PARALLEL_THRESHOLD_FOR_INSERT,
            size_t maxPointsPerNode = DEFAULT_MAX_POINTS_PER_NODE);
+#endif
     ~Octree();
 
     struct BoundingBox
@@ -151,4 +165,9 @@ private:
     size_t mParallelThresholdForInsert;
     std::vector<Particle*> mRawParticles;
     std::array<double, 3> mProfileData;
+#ifdef PERF_PROFILE
+    std::unique_ptr<PerfSection>& mBbox;
+    std::unique_ptr<PerfSection>& mInsert;
+    std::unique_ptr<PerfSection>& mLeaf;
+#endif
 };

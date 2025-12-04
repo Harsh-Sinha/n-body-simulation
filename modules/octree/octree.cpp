@@ -34,11 +34,26 @@ private:
 };
 }
 
+#ifdef PERF_PROFILE
+Octree::Octree(std::vector<Particle*>& points,
+               std::unique_ptr<PerfSection>& bbox,
+               std::unique_ptr<PerfSection>& insrt,
+               std::unique_ptr<PerfSection>& leaf,
+               bool supportMultithread,
+               size_t parallelThresholdForInsert, size_t maxPointsPerNode)
+    : mSupportMultithread(supportMultithread)
+    , mMaxPointsPerNode(maxPointsPerNode)
+    , mParallelThresholdForInsert(parallelThresholdForInsert)
+    , mBbox(bbox)
+    , mInsert(insrt)
+    , mLeaf(leaf)
+#else
 Octree::Octree(std::vector<Particle*>& points, bool supportMultithread, 
                size_t parallelThresholdForInsert, size_t maxPointsPerNode) 
     : mSupportMultithread(supportMultithread)
     , mMaxPointsPerNode(maxPointsPerNode)
     , mParallelThresholdForInsert(parallelThresholdForInsert)
+#endif
 {
     if (points.size() == 0)
     {
@@ -46,11 +61,20 @@ Octree::Octree(std::vector<Particle*>& points, bool supportMultithread,
     }
     
     {
+#ifdef PERF_PROFILE
+        mBbox->start();
+#endif
         ScopedTimer timer(mProfileData[0]);
         mRoot->boundingBox = computeBoundingBox(points);
+#ifdef PERF_PROFILE
+      mBbox->stop();  
+#endif
     }
 
     {
+#ifdef PERF_PROFILE
+        mInsert->start();
+#endif
         ScopedTimer timer(mProfileData[1]);
         if (mSupportMultithread)
         {
@@ -70,11 +94,20 @@ Octree::Octree(std::vector<Particle*>& points, bool supportMultithread,
                 insert(mRoot, point);
             }
         }
+#ifdef PERF_PROFILE
+      mInsert->stop();  
+#endif
     }
 
     {
+#ifdef PERF_PROFILE
+        mLeaf->start();  
+#endif
         ScopedTimer timer(mProfileData[2]);
         generateLeafNodeList(mRoot);
+#ifdef PERF_PROFILE
+      mLeaf->stop();  
+#endif
     }
 }
 

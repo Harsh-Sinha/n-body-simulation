@@ -6,6 +6,10 @@
 #include "particle.h"
 #include "data_store.h"
 
+#ifdef PERF_PROFILE
+#include "perf_profiler.h"
+#endif
+
 class BarnesHut
 {
 public:
@@ -36,4 +40,13 @@ private:
     bool mProfile;
     size_t mNumIterations;
     DataStore mDataStore;
+#ifdef PERF_PROFILE
+    std::unique_ptr<PerfSection> mPerfBbox;
+    std::unique_ptr<PerfSection> mPerfInsert;
+    std::unique_ptr<PerfSection> mPerfLeaf;
+    std::unique_ptr<PerfSection> mPerfMass;
+    std::unique_ptr<PerfSection> mPerfForce;
+    std::unique_ptr<PerfSection> mPerfLeap;
+    std::unique_ptr<PerfSection> mPerfStore;
+#endif
 };

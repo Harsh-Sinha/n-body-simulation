@@ -64,14 +64,29 @@ BarnesHut::BarnesHut(std::vector<Particle*>& particles, double dt,
         mDataStore.addMass(particles[i]->mId, particles[i]->mMass);
         mDataStore.addPosition(0, particles[i]->mId, particles[i]->mPosition);
     }
+#ifdef PERF_PROFILE
+    auto& instance = PerfProfiler::getInstance();
+    instance.setProfilerName(mSimulationName);
+
+    mPerfBbox = instance.createSectionProfiler("compute_bounding_box");
+    mPerfInsert = instance.createSectionProfiler("insert_particles");
+    mPerfLeaf = instance.createSectionProfiler("generate_leaf_nodes");
+    mPerfMass = instance.createSectionProfiler("calculate_center_of_mass");
+    mPerfForce = instance.createSectionProfiler("applying_forces");
+    mPerfLeap = instance.createSectionProfiler("leapfrog_integration");
+    mPerfStore = instance.createSectionProfiler("update_data_store");
+#endif
 }
 
 void BarnesHut::simulate()
 {
     for (size_t i = 0; i < mNumIterations; ++i)
     {
+#ifdef PERF_PROFILE
+        PROFILE(0, Octree tree(mParticles, mPerfBbox, mPerfInsert, mPerfLeaf, true, 1000, 1));
+#else
         PROFILE(0, Octree tree(mParticles, true, 1000, 1));
-
+#endif
         if (mProfile)
         {
             auto& profileData = tree.getProfileData();
@@ -81,10 +96,21 @@ void BarnesHut::simulate()
         }
 
         // calculate center of mass
+#ifdef PERF_PROFILE
+        mPerfMass->start();
+#endif
         PROFILE(1, calculateCenterOfMass(tree.getLeafNodes()));
-
+#ifdef PERF_PROFILE
+        mPerfMass->stop();
+#endif
         // apply forces
+#ifdef PERF_PROFILE
+        mPerfForce->start();
+#endif
         PROFILE(2, calculateForce(tree.getLeafNodes(), tree.getRootNode()));
+#ifdef PERF_PROFILE
+        mPerfForce->stop();
+#endif
 
         // update pos/vel/acc
         PROFILE(3, updateState(i));
@@ -291,6 +317,9 @@ void BarnesHut::updateState(size_t iteration)
     const double halfDtSquared = halfDt * mDt;
 
     {
+#ifdef PERF_PROFILE
+        mPerfLeap->start();
+#endif
         double elapsed = 0.0;
         ScopedTimer timer(elapsed);
         #pragma omp parallel for schedule(static)
@@ -326,9 +355,15 @@ void BarnesHut::updateState(size_t iteration)
         }
         timer.recordElapsedMs();
         mDataStore.addProfileData(7, elapsed);
+#ifdef PERF_PROFILE
+        mPerfLeap->stop();
+#endif
     }
 
     {
+#ifdef PERF_PROFILE
+        mPerfStore->start();
+#endif
         double elapsed = 0.0;
         ScopedTimer timer(elapsed);
         #pragma omp parallel for schedule(static)
@@ -339,5 +374,8 @@ void BarnesHut::updateState(size_t iteration)
         }
         timer.recordElapsedMs();
         mDataStore.addProfileData(8, elapsed);
+#ifdef PERF_PROFILE
+        mPerfStore->stop();
+#endif
     }
 }
