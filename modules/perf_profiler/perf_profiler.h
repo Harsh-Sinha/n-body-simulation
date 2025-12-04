@@ -19,6 +19,28 @@ public:
 
     ~PerfCounter();
 
+    PerfCounter(const PerfCounter&) = delete;
+    PerfCounter& operator=(const PerfCounter&) = delete;
+
+    PerfCounter(PerfCounter&& other) noexcept
+    {
+        mAttr = other.mAttr;
+        mFd = other.mFd;
+        other.mFd = -1;
+    }
+
+    PerfCounter& operator=(PerfCounter&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mFd != -1) close(mFd);
+            mAttr = other.mAttr;
+            mFd = other.mFd;
+            other.mFd = -1;
+        }
+        return *this;
+    };
+
     inline void start()
     {
         ioctl(mFd, PERF_EVENT_IOC_RESET, 0);
@@ -30,11 +52,21 @@ public:
         ioctl(mFd, PERF_EVENT_IOC_DISABLE, 0);
     }
 
-    inline long long read() const
+    inline long long read()
     {
-        long long value = 0;
-        ::read(mFd, &value, sizeof(value));
-        return value;
+        struct
+        {
+            long long value;
+            long long time_enabled;
+            long long time_running;
+        } data;
+
+        ::read(mFd, &data, sizeof(data));
+
+        if (data.time_running == 0) return 0;
+
+        // scale counter to account for multiplexing
+        return (long long)(data.value * ((double)data.time_enabled / data.time_running));
     }
 
 private:

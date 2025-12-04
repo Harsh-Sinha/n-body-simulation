@@ -8,33 +8,6 @@
 
 
 
-namespace
-{
-namespace PerfEvents
-{
-    static constexpr uint32_t L1D_TYPE = PERF_TYPE_HW_CACHE;
-    static constexpr uint64_t L1D_READ_MISS =
-        PERF_COUNT_HW_CACHE_L1D |
-        (PERF_COUNT_HW_CACHE_OP_READ << 8) |
-        (PERF_COUNT_HW_CACHE_RESULT_MISS << 16);
-
-    static constexpr uint32_t LLC_TYPE = PERF_TYPE_HARDWARE;
-    static constexpr uint64_t LLC_MISS = PERF_COUNT_HW_CACHE_MISSES;
-
-    static constexpr uint32_t CYCLES_TYPE = PERF_TYPE_HARDWARE;
-    static constexpr uint64_t CYCLES = PERF_COUNT_HW_CPU_CYCLES;
-
-    static constexpr uint32_t INSTR_TYPE = PERF_TYPE_HARDWARE;
-    static constexpr uint64_t INSTR = PERF_COUNT_HW_INSTRUCTIONS;
-
-    static constexpr uint32_t BRANCH_MISS_TYPE = PERF_TYPE_HARDWARE;
-    static constexpr uint64_t BRANCH_MISS = PERF_COUNT_HW_BRANCH_MISSES;
-}
-}
-
-
-
-
 PerfCounter::PerfCounter(uint32_t type, uint64_t config)
 {
     memset(&mAttr, 0x0, sizeof(mAttr));
@@ -44,8 +17,10 @@ PerfCounter::PerfCounter(uint32_t type, uint64_t config)
     mAttr.disabled = 1;
     mAttr.exclude_kernel = 1;
     mAttr.exclude_hv = 1;
+    mAttr.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
 
-    mFd = perf_event_open(&mAttr, 0, -1, -1, 0);
+    mFd = perf_event_open(&mAttr, getpid(), -1, -1, 0);
+
     if (mFd == -1)
     {
         throw std::runtime_error("perf_event_open failed: " + std::string(strerror(errno)));
@@ -73,11 +48,11 @@ PerfSection::PerfSection(std::string& name, PerfProfiler& profilerInstance)
     : mName(name)
     , mProfilerInstance(profilerInstance)
 {
-    mCounters.emplace_back(PerfEvents::L1D_TYPE,         PerfEvents::L1D_READ_MISS);
-    mCounters.emplace_back(PerfEvents::LLC_TYPE,         PerfEvents::LLC_MISS);
-    mCounters.emplace_back(PerfEvents::CYCLES_TYPE,      PerfEvents::CYCLES);
-    mCounters.emplace_back(PerfEvents::INSTR_TYPE,       PerfEvents::INSTR);
-    mCounters.emplace_back(PerfEvents::BRANCH_MISS_TYPE, PerfEvents::BRANCH_MISS);
+    mCounters.emplace_back(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_REFERENCES);
+    mCounters.emplace_back(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES);
+    mCounters.emplace_back(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+    mCounters.emplace_back(PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+    mCounters.emplace_back(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES);
 }
 
 PerfSection::~PerfSection()
@@ -90,12 +65,14 @@ PerfSection::~PerfSection()
     std::stringstream ss;
 
     ss << "Section: " << mName << "\n";
-    ss << "L1 Misses:      " << mData[0] << "\n";
-    ss << "LLC Misses:     " << mData[1] << "\n";
-    ss << "Cycles:         " << mData[2] << "\n";
-    ss << "Instructions:   " << mData[3] << "\n";
-    ss << "Branch Misses:  " << mData[4] << "\n";
-
+    ss << "cache-references: " << mData[0] << "\n";
+    ss << "cache-misses:     " << mData[1] << "\n";
+    ss << "cycles:           " << mData[2] << "\n";
+    ss << "instructions:     " << mData[3] << "\n";
+    ss << "branch-misses:    " << mData[4] << "\n";
+    ss << "cache-miss %:     " << static_cast<double>(mData[1]) / static_cast<double>(mData[0]) << "\n";
+    ss << "IPC:              " << static_cast<double>(mData[3]) / static_cast<double>(mData[2]) << "\n";
+ 
     auto str = ss.str();
     mProfilerInstance.addProfileData(str);
 }
