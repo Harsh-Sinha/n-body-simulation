@@ -66,8 +66,17 @@ else()
     
     add_subdirectory(external/alembic)
 
+    if (${PERF_PROFILING})
+        add_compile_definitions(PERF_PROFILE)
+
+        message(STATUS "enabling perf profiling for implementation")
+    endif()
+
     add_subdirectory(modules)
     add_subdirectory(tools)
-    add_subdirectory(playground)
-    add_subdirectory(benchmark)
+
+    if (NOT ${PERF_PROFILING})
+        add_subdirectory(playground)
+        add_subdirectory(benchmark)
+    endif()
 endif()
