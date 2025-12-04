@@ -47,12 +47,9 @@ def parse_file(path):
 
 def determine_big_o_coeff(field, x, y):
     denom = 0.0
-    if field == "octree creation" or field == "overall" or field == "applying forces calculation" or field == "insert points" or field == "generate leaf nodes":
+    if field == "octree creation" or field == "overall" or field == "applying forces calculation" or field == "insert points" or field == "generate leaf nodes" or field == "center of mass calculation":
         # O(nlogn) algorithms
         denom = x * math.log(x, 10)
-    elif field == "center of mass calculation":
-        # O(8^logn) algorithm
-        denom = 8.0 ** (math.log(x, 10))
     else: # field == "update pos/vel/acc" or field == "compute bounding box"
         # O(n) algorithms
         denom = x
@@ -134,7 +131,7 @@ def main():
                     va="bottom"
                 )
                 c = determine_big_o_coeff(field, xi, yi)
-                coeffs += f"n={xi} coeff={c:.4f}\n"
+                coeffs += f"n={xi} coeff={c:.7f}\n"
 
             plt.xlabel("Particle Count")
             plt.ylabel("Time (ms)")
