@@ -47,13 +47,13 @@ def parse_file(path):
 
 def determine_big_o_coeff(field, x, y):
     denom = 0.0
-    if field == "octree creation" or field == "overall" or field == "applying forces calculation" or field == "insert points":
+    if field == "octree creation" or field == "overall" or field == "applying forces calculation" or field == "insert points" or field == "generate leaf nodes":
         # O(nlogn) algorithms
         denom = x * math.log(x, 10)
     elif field == "center of mass calculation":
         # O(8^logn) algorithm
         denom = 8.0 ** (math.log(x, 10))
-    else: # field == "update pos/vel/acc" or field == "compute bounding box" or field == "generate leaf nodes"
+    else: # field == "update pos/vel/acc" or field == "compute bounding box"
         # O(n) algorithms
         denom = x
     return y / denom
