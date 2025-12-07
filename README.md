@@ -90,6 +90,10 @@ If configured and built with `-DENABLE_TESTING=ON`, then you can do the followin
 ```
 ctest --test-dir build --output-on-failure
 ```
+Note: Ensure that you have set `OMP_NUM_THREADS` environment variable so that the parallel test actually tests something. If running on Great Lakes, then ensure you have ran the following before executing tests:  
+```
+module load gcc
+```
 
 # Slurm
 This folder contains all my slurm scripts that I used to create jobs/tasks on Great Lakes to generate the timing and perf profile data. These scripts must ran or `sbatch`-ed within the `slurm` folder (current working directory must be `slurm` folder).  
