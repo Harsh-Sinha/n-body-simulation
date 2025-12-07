@@ -81,4 +81,14 @@ options:
 If configured and built with `-DENABLE_TESTING=ON`, then you can do the following to execute all unit tests:  
 ```
 ctest --test-dir build --output-on-failure
-```  
+```
+
+# Slurm
+This folder contains all my slurm scripts that I used to create jobs/tasks on Great Lakes to generate the timing and perf profile data. These scripts must ran or `sbatch`-ed within the `slurm` folder (current working directory must be `slurm` folder).
+
+# Timing Results
+This folder contains the timing and perf profile data from my latest run on Great Lakes. It has the following folders containing:  
+`impl` - this contains timing data of the barnes hut executable generated from running `./batch_all.sh`  
+`non_morton` - this contains timing data of barnes hut without morton ordering of leaf nodes generated from running `./batch_all.sh`  
+`octree` - this contains the octree insert strategies timing data generated from running `sbatch benchmark_octree.sh`  
+`perf` - this contains the perf data for each section of the barnes hut generated from running `./batch_perf.sh`  
