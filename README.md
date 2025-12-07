@@ -8,7 +8,7 @@ module unload gcc
 
 # Getting Started
 
-Make use of the `setup_env.sh` script. This will init and update all the git submodules for this repo, build and install the solution, and create a sample particle file with 50k particles.   
+Make use of the `setup_env.sh` script. This will init and update all the git submodules for this repo, build and install the solution, and create a sample `particle.txt` file with 50k particles.   
 ```
 ./setup_env.sh
 ```
