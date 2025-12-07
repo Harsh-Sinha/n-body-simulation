@@ -1,5 +1,10 @@
 # Requirements
-I make use of CMake for my build system, and you must have a valid C++ compiler installed.
+I make use of CMake for my build system, and you must have a valid C++ compiler installed.  
+
+Note: When building on Great Lakes ensure that you DO NOT have the gcc module loaded. Run the following prior to building:  
+```
+module unload gcc
+```
 
 # Getting Started
 
