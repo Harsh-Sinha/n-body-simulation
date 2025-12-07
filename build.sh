@@ -15,3 +15,6 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install -DALEMBIC_SHARED
 cmake --build build
 
 cmake --build build --target install
+
+# create a example particle file
+./install/bin/tools/particle_file_generator -box -500 -500 -500 500 500 500 -mass 1 100 -vel 0 20 -acc 0 5 -n 50000 -f particles.txt
