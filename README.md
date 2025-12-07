@@ -4,6 +4,9 @@ I make use of CMake for my build system, and you must have a valid C++ compiler 
 # Getting Started
 
 Make use of the `setup_env.sh` script. This will init and update all the git submodules for this repo, build and install the solution, and create a sample particle file with 50k particles.   
+```
+./setup_env.sh
+```
    
 Note: This script will call the `build.sh` script which builds and installs the solution. This script by default builds a release version with unit testing of my barnes hut algorithm disabled and perf profiling disabled. To use either of these you will need to edit the bash script and turn them from OFF to ON.  
 
