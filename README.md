@@ -91,4 +91,7 @@ This folder contains the timing and perf profile data from my latest run on Grea
 `impl` - this contains timing data of the barnes hut executable generated from running `./batch_all.sh`  
 `non_morton` - this contains timing data of barnes hut without morton ordering of leaf nodes generated from running `./batch_all.sh`  
 `octree` - this contains the octree insert strategies timing data generated from running `sbatch benchmark_octree.sh`  
-`perf` - this contains the perf data for each section of the barnes hut generated from running `./batch_perf.sh`  
+`perf` - this contains the perf data for each section of the barnes hut generated from running `./batch_perf.sh` 
+
+# Reference Barnes Hut
+Under `external/barnes-hut-simulation` you will find the forked repo of reference implementation I used to verify correctness. It has its own readme on how to build and run the barnes hut executable.
