@@ -92,7 +92,12 @@ ctest --test-dir build --output-on-failure
 ```
 
 # Slurm
-This folder contains all my slurm scripts that I used to create jobs/tasks on Great Lakes to generate the timing and perf profile data. These scripts must ran or `sbatch`-ed within the `slurm` folder (current working directory must be `slurm` folder).
+This folder contains all my slurm scripts that I used to create jobs/tasks on Great Lakes to generate the timing and perf profile data. These scripts must ran or `sbatch`-ed within the `slurm` folder (current working directory must be `slurm` folder).  
+
+Note: Ensure that you have ran the following before `sbatch`-ing any slurm script:  
+```
+module load gcc
+```
 
 # Timing Results
 This folder contains the timing and perf profile data from my latest run on Great Lakes. It has the following folders containing:  
