@@ -76,7 +76,6 @@ else()
     add_subdirectory(tools)
 
     if (NOT ${PERF_PROFILING})
-        add_subdirectory(playground)
         add_subdirectory(benchmark)
     endif()
 endif()
